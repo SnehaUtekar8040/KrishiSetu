@@ -39,8 +39,8 @@ function Navbar() {
           <a href="#contact" className="navbar__link" id="nav-contact">Contact</a>
         </div>
 
-        <Link to="/predict" className="navbar__cta" id="nav-cta">
-          Get Started
+        <Link to="/auth" className="navbar__cta" id="nav-cta">
+          Login / Sign Up
         </Link>
 
         <button 
