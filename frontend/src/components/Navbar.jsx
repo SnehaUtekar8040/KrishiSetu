@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Leaf } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Leaf, LayoutDashboard, LogOut } from 'lucide-react';
 import './Navbar.css';
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -16,7 +18,16 @@ function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    // Check login status on every route change
+    setIsLoggedIn(!!localStorage.getItem('token'));
   }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    navigate('/auth');
+  };
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`} id="main-nav">
@@ -25,7 +36,7 @@ function Navbar() {
           <div className="navbar__logo-icon">
             <Leaf size={22} />
           </div>
-          <span className="navbar__logo-text">KrishiMitra</span>
+          <span className="navbar__logo-text">KrishiSetu</span>
         </Link>
 
         <div className={`navbar__links ${menuOpen ? 'navbar__links--open' : ''}`}>
@@ -39,12 +50,27 @@ function Navbar() {
           <a href="#contact" className="navbar__link" id="nav-contact">Contact</a>
         </div>
 
-        <Link to="/auth" className="navbar__cta" id="nav-cta">
-          Login / Sign Up
-        </Link>
+        <div className="navbar__right">
+          {isLoggedIn ? (
+            <>
+              <Link to="/dashboard" className="navbar__dashboard-btn" id="nav-dashboard">
+                <LayoutDashboard size={16} />
+                Dashboard
+              </Link>
+              <button className="navbar__logout-btn" onClick={handleLogout} id="nav-logout">
+                <LogOut size={15} />
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="navbar__cta" id="nav-cta">
+              Login / Sign Up
+            </Link>
+          )}
+        </div>
 
-        <button 
-          className="navbar__menu-btn" 
+        <button
+          className="navbar__menu-btn"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
           id="nav-menu-toggle"

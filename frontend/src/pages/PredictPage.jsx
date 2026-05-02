@@ -53,6 +53,15 @@ function PredictPage() {
       const data = await response.json();
       if (data.prediction) {
         setResult(data.prediction);
+        // ── Save to prediction history ──
+        const history = JSON.parse(localStorage.getItem('predictionHistory') || '[]');
+        history.push({
+          crop: data.prediction,
+          date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          soil: form.Soil,
+          temp: form.Temperature,
+        });
+        localStorage.setItem('predictionHistory', JSON.stringify(history));
       } else {
         setError(data.error || 'Prediction failed. Please try again.');
       }
