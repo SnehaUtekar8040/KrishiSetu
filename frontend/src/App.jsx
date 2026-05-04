@@ -6,6 +6,7 @@ import PredictPage from './pages/PredictPage';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import SellPage from './pages/SellPage';
+import { TranslationProvider } from './lib/TranslationContext';
 
 // ── Protected Route: redirects to /auth if not logged in ──
 function ProtectedRoute({ children }) {
@@ -54,9 +55,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <TranslationProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </TranslationProvider>
   );
 }
 

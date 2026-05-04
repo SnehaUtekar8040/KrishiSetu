@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import {
   Leaf, User, Phone, MapPin, LogOut, Sprout, MessageCircle,
   CloudSun, TrendingUp, Calendar, Lightbulb, ChevronRight,
@@ -8,22 +8,74 @@ import {
   IndianRupee, Wheat, TreeDeciduous, Filter, Building2, ExternalLink, BadgeCheck,
   ShoppingBag,
 } from 'lucide-react';
+import VendorDashboard from '../components/VendorDashboard';
+import CropPredictor from '../components/CropPredictor';
+import Marketplace from '../components/Marketplace';
+import { useTranslation } from '../lib/TranslationContext';
 import './DashboardPage.css';
 
 // ─── Seasonal Crop Calendar ────────────────────────────────────────────────
 const MONTH_CROPS = {
-  0: { season: 'Rabi (Winter)', crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Mustard', '🥬 Spinach', '🥕 Carrot'] },
-  1: { season: 'Rabi (Winter)', crops: ['🌾 Wheat', '🫘 Lentil', '🧅 Onion', '🥦 Pea', '🌻 Sunflower'] },
-  2: { season: 'Rabi Harvest', crops: ['🌻 Sunflower', '🧅 Onion', '🍅 Tomato', '🥬 Spinach', '🥕 Carrot'] },
-  3: { season: 'Zaid (Summer)', crops: ['🍉 Watermelon', '🍈 Muskmelon', '🥒 Cucumber', '🌽 Maize', '🥬 Bitter Gourd'] },
-  4: { season: 'Zaid (Summer)', crops: ['🍉 Watermelon', '🍆 Brinjal', '🫑 LadyFinger', '🌾 Moong Dal', '🌽 Maize'] },
-  5: { season: 'Kharif Sowing', crops: ['🌾 Rice', '🌽 Maize', '🫘 Soybean', '🥜 Groundnut', '🌿 Cotton'] },
-  6: { season: 'Kharif (Monsoon)', crops: ['🌾 Rice', '🌿 Cotton', '🫘 Soybean', '🥜 Groundnut', '🍚 Jowar'] },
-  7: { season: 'Kharif (Monsoon)', crops: ['🌾 Rice', '🌿 Cotton', '🌴 Sugarcane', '🥜 Groundnut', '🫘 Arhar'] },
-  8: { season: 'Kharif Harvest', crops: ['🌾 Rice', '🌿 Jute', '🌴 Sugarcane', '🫘 Arhar', '🍚 Bajra'] },
-  9: { season: 'Rabi Sowing', crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Mustard', '🌻 Sunflower', '🥬 Spinach'] },
-  10: { season: 'Rabi Sowing', crops: ['🌾 Wheat', '🫘 Lentil', '🧅 Mustard', '🥕 Carrot', '🥦 Pea'] },
-  11: { season: 'Rabi (Winter)', crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Onion', '🥕 Carrot', '🥜 Pea'] },
+  0: { 
+    season: 'Rabi (Winter)', 
+    crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Mustard', '🥬 Spinach', '🥕 Carrot', '🥔 Potato', '🥦 Broccoli', '🥬 Fenugreek (Methi)'],
+    tips: 'Ensure proper irrigation for Wheat during the crown root initiation stage. Apply nitrogen-based fertilizers for leafy vegetables.'
+  },
+  1: { 
+    season: 'Rabi (Winter)', 
+    crops: ['🌾 Wheat', '🫘 Lentil', '🧅 Onion', '🥦 Pea', '🌻 Sunflower', '🍓 Strawberry', '🥬 Lettuce', '🥔 Potato'],
+    tips: 'Protect crops from late frost. Harvest early potatoes and peas. Monitor for aphids in Mustard.'
+  },
+  2: { 
+    season: 'Rabi Harvest / Summer Sowing', 
+    crops: ['🌻 Sunflower', '🧅 Onion', '🍅 Tomato', '🥒 Cucumber', '🥬 Spinach', '🍉 Watermelon', '🍈 Muskmelon', '🫑 Capsicum'],
+    tips: 'Begin harvesting Rabi crops. Prepare land for Zaid (summer) crops. Focus on soil moisture retention as temperatures rise.'
+  },
+  3: { 
+    season: 'Zaid (Summer)', 
+    crops: ['🍉 Watermelon', '🍈 Muskmelon', '🥒 Cucumber', '🌽 Maize', '🥬 Bitter Gourd', '🫑 LadyFinger', '🍆 Brinjal', '🫘 Moong Dal'],
+    tips: 'Use mulch to prevent evaporation. Frequent light irrigation is better than heavy watering. Watch for red pumpkin beetles.'
+  },
+  4: { 
+    season: 'Zaid (Summer)', 
+    crops: ['🍉 Watermelon', '🍆 Brinjal', '🫑 LadyFinger', '🌾 Moong Dal', '🌽 Maize', '🍈 Muskmelon', '🥒 Bottle Gourd', '🌶️ Chillies'],
+    tips: 'Manage water stress carefully. Peak harvest time for summer fruits like Watermelon. Sow early Kharif crops in irrigated areas.'
+  },
+  5: { 
+    season: 'Kharif Sowing (Monsoon)', 
+    crops: ['🌾 Rice', '🌽 Maize', '🫘 Soybean', '🥜 Groundnut', '🌿 Cotton', '🫘 Pigeon Pea (Arhar)', '🍚 Jowar', '🌾 Bajra'],
+    tips: 'Sow with the first monsoon rains. Ensure good drainage to prevent waterlogging. Treat seeds with fungicides before sowing.'
+  },
+  6: { 
+    season: 'Kharif (Monsoon)', 
+    crops: ['🌾 Rice', '🌿 Cotton', '🫘 Soybean', '🥜 Groundnut', '🍚 Jowar', '🌾 Bajra', '🫘 Black Gram', '🥥 Coconut'],
+    tips: 'Monitor for pests during the high humidity of monsoon. Top-dress nitrogen in Rice fields. Weed management is critical now.'
+  },
+  7: { 
+    season: 'Kharif (Monsoon)', 
+    crops: ['🌾 Rice', '🌿 Cotton', '🌴 Sugarcane', '🥜 Groundnut', '🫘 Arhar', '🌽 Maize', '🫘 Soybean', '🌿 Jute'],
+    tips: 'Check for stem borer in Rice. Cotton needs protection from bollworms. Maintain soil fertility with organic amendments.'
+  },
+  8: { 
+    season: 'Kharif Harvest', 
+    crops: ['🌾 Rice', '🌿 Jute', '🌴 Sugarcane', '🫘 Arhar', '🍚 Bajra', '🌽 Maize', '🫘 Soybean', '🥜 Groundnut'],
+    tips: 'Harvest early Kharif crops. Prepare seedbeds for Rabi nursery (Onion, Tomato). Drain excess water from fields before harvest.'
+  },
+  9: { 
+    season: 'Rabi Sowing', 
+    crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Mustard', '🌻 Sunflower', '🥬 Spinach', '🥕 Carrot', '🧅 Onion', '🥦 Garlic'],
+    tips: 'Sow Rabi crops as temperatures cool. Focus on phosphorus-rich fertilizers for root development. Maintain residual soil moisture.'
+  },
+  10: { 
+    season: 'Rabi Sowing', 
+    crops: ['🌾 Wheat', '🫘 Lentil', '🧅 Mustard', '🥕 Carrot', '🥦 Pea', '🥬 Spinach', '🥔 Potato', '🥬 Coriander'],
+    tips: 'Complete sowing of Wheat and Mustard. First irrigation for early sown Rabi crops. Mulch between rows for moisture.'
+  },
+  11: { 
+    season: 'Rabi (Winter)', 
+    crops: ['🌾 Wheat', '🫘 Chickpea', '🧅 Onion', '🥕 Carrot', '🥜 Pea', '🥬 Spinach', '🥦 Cabbage', '🥦 Cauliflower'],
+    tips: 'Focus on pest control in vegetables. Monitor wheat for rust diseases. Apply second dose of nitrogen to field crops.'
+  },
 };
 
 // ─── Fertilizer Data (from CSV) ──────────────────────────────────────────────
@@ -94,9 +146,9 @@ const formatDay = (dateStr, index) => {
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [predictions, setPredictions] = useState([]);
-  const [tipIndex, setTipIndex] = useState(0);
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState(null);
@@ -116,8 +168,22 @@ function DashboardPage() {
   const [expandedFert, setExpandedFert] = useState(null);
 
   // Tab navigation state
-  const [activeSection, setActiveSection] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'overview');
   const [mySellings, setMySellings] = useState([]);
+
+  // Sync activeSection with searchParams
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section && section !== activeSection) {
+      setActiveSection(section);
+    }
+  }, [searchParams]);
+
+  const updateSection = (sec) => {
+    setActiveSection(sec);
+    setSearchParams({ section: sec });
+  };
 
   const month = new Date().getMonth();
   const calendar = MONTH_CROPS[month];
@@ -149,11 +215,7 @@ function DashboardPage() {
     setPredictions(hist);
   }, []);
 
-  // ── Rotate tips every 8 seconds ──
-  useEffect(() => {
-    const t = setInterval(() => setTipIndex((i) => (i + 1) % TIPS.length), 8000);
-    return () => clearInterval(t);
-  }, []);
+
 
   // ── Fetch weather by village name ──
   useEffect(() => {
@@ -223,9 +285,18 @@ function DashboardPage() {
     setPredictions([]);
   };
 
-  const tip = TIPS[tipIndex];
+  const refreshHistory = () => {
+    const hist = JSON.parse(localStorage.getItem('predictionHistory') || '[]');
+    setPredictions(hist);
+  };
+
+
 
   if (!user) return null;
+
+  if (user.role === 'vendor') {
+    return <VendorDashboard user={user} onLogout={handleLogout} />;
+  }
 
   const rainAlert = weather?.rainAlert && showAlert;
   const tomorrow = weather?.tomorrowRain;
@@ -259,41 +330,36 @@ function DashboardPage() {
         </div>
 
         <nav className="sidebar__nav">
-          <button className={`sidebar__link ${activeSection === 'overview' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('overview')}>
-            <TrendingUp size={18} /> Overview
+          <button className={`sidebar__link ${activeSection === 'overview' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('overview')}>
+            <TrendingUp size={18} /> {t('Overview')}
           </button>
-          <Link to="/predict" className="sidebar__link">
-            <Sprout size={18} /> Crop Predictor
-          </Link>
-          <button className={`sidebar__link ${activeSection === 'weather' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('weather')}>
-            <CloudSun size={18} /> Weather Forecast
+          <button className={`sidebar__link ${activeSection === 'predict' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('predict')}>
+            <Sprout size={18} /> {t('Crop Predictor')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'history' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('history')}>
-            <Calendar size={18} /> My History
+
+          <button className={`sidebar__link ${activeSection === 'calendar' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('calendar')}>
+            <Calendar size={18} /> {t('Crop Calendar')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'calendar' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('calendar')}>
-            <Calendar size={18} /> Crop Calendar
+          <button className={`sidebar__link ${activeSection === 'tips' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('tips')}>
+            <Lightbulb size={18} /> {t('Farming Tips')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'tips' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('tips')}>
-            <Lightbulb size={18} /> Farming Tips
+          <button className={`sidebar__link ${activeSection === 'mandi' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('mandi')}>
+            <ShoppingCart size={18} /> {t('Mandi Prices')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'mandi' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('mandi')}>
-            <ShoppingCart size={18} /> Mandi Prices
+          <button className={`sidebar__link ${activeSection === 'fertilizer' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('fertilizer')}>
+            <FlaskConical size={18} /> {t('Fertilizer Guide')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'fertilizer' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('fertilizer')}>
-            <FlaskConical size={18} /> Fertilizer Guide
+          <button className={`sidebar__link ${activeSection === 'schemes' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('schemes')}>
+            <Building2 size={18} /> {t('Govt Schemes')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'schemes' ? 'sidebar__link--active' : ''}`} onClick={() => setActiveSection('schemes')}>
-            <Building2 size={18} /> Govt Schemes
+          <button className={`sidebar__link ${activeSection === 'sell' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('sell')}>
+            <ShoppingBag size={18} /> {t('Sell Your Crop')}
           </button>
-          <Link to="/sell" className="sidebar__link">
-            <ShoppingBag size={18} /> Sell Your Crop
-          </Link>
         </nav>
 
         <button className="sidebar__logout" onClick={handleLogout} id="logout-btn">
           <LogOut size={17} />
-          Sign Out
+          {t('Sign Out')}
         </button>
       </aside>
 
@@ -303,7 +369,7 @@ function DashboardPage() {
         {/* ── Top Header ── */}
         <header className="dashboard__header" id="overview">
           <div>
-            <p className="dashboard__greeting">{greeting}, 👋</p>
+            <p className="dashboard__greeting">{t(greeting)}, 👋</p>
             <h1 className="dashboard__username">{user.name}</h1>
             <p className="dashboard__location">
               <MapPin size={13} /> {user.village}, {user.state}
@@ -315,41 +381,35 @@ function DashboardPage() {
         </header>
 
         {/* ── Stats Row ── */}
-        {activeSection === 'overview' && (
-          <div className="dashboard__stats" id="dashboard-stats">
-            <div className="stat-card stat-card--green">
-              <div className="stat-card__icon">🌾</div>
-              <div>
-                <p className="stat-card__num">{predictions.length}</p>
-                <p className="stat-card__label">Predictions Made</p>
-              </div>
-            </div>
-            <div className="stat-card stat-card--terra">
-              <div className="stat-card__icon">🗓️</div>
-              <div>
-                <p className="stat-card__num">{calendar.season.split(' ')[0]}</p>
-                <p className="stat-card__label">Current Season</p>
-              </div>
-            </div>
-            <div className="stat-card stat-card--blue">
-              <div className="stat-card__icon">💧</div>
-              <div>
-                <p className="stat-card__num">{weather ? `${weather.current.humidity}%` : '--'}</p>
-                <p className="stat-card__label">Humidity</p>
-              </div>
-            </div>
-            <div className="stat-card stat-card--brown">
-              <div className="stat-card__icon">🌡️</div>
-              <div>
-                <p className="stat-card__num">{weather ? `${weather.current.temp}°C` : '--'}</p>
-                <p className="stat-card__label">Temperature</p>
-              </div>
-            </div>
+        {/* Stats removed as per user request */}
+
+        {(activeSection === 'predict' || activeSection === 'sell') && (
+          <div className="section-header">
+            <h2 className="section-title">
+              {activeSection === 'predict' ? t('Crop Predictor') : t('Marketplace')}
+            </h2>
+            <button className="section-back" onClick={() => updateSection('overview')}>
+              <ArrowRight size={16} className="rotate-180" /> {t('Back to Overview')}
+            </button>
           </div>
         )}
 
         {/* ── Grid Layout ── */}
-        <div className="dashboard__grid">
+        <div className={`dashboard__grid ${activeSection !== 'overview' ? 'dashboard__grid--full' : ''}`}>
+
+          {/* ── Predict Section ── */}
+          {activeSection === 'predict' && (
+            <div className="widget--full">
+              <CropPredictor onPredictionSuccess={refreshHistory} />
+            </div>
+          )}
+
+          {/* ── Marketplace Section ── */}
+          {activeSection === 'sell' && (
+            <div className="widget--full">
+              <Marketplace user={user} />
+            </div>
+          )}
 
           {/* ── Overview Layout ── */}
           {activeSection === 'overview' && (
@@ -357,7 +417,7 @@ function DashboardPage() {
               {/* ── Farmer Profile Card ── */}
               <div className="widget widget--profile" id="profile-widget">
                 <div className="widget__header">
-                  <User size={18} /> <span>My Profile</span>
+                  <User size={18} /> <span>{t('My Profile')}</span>
                 </div>
                 <div className="profile__body">
                   <div className="profile__avatar">
@@ -384,13 +444,13 @@ function DashboardPage() {
               {/* ── My Sellings Widget ── */}
               <div className="widget widget--my-sellings" id="my-sellings-widget">
                 <div className="widget__header">
-                  <ShoppingBag size={18} /> <span>Crops on Sale</span>
+                  <ShoppingBag size={18} /> <span>{t('Crops on Sale')}</span>
                 </div>
                 <div className="my-sellings-list">
                   {mySellings.length === 0 ? (
                     <div className="my-sellings-empty">
                       <p>No crops listed.</p>
-                      <Link to="/sell" className="btn-link">Sell your crop →</Link>
+                      <button onClick={() => updateSection('sell')} className="btn-link">Sell your crop →</button>
                     </div>
                   ) : (
                     <>
@@ -404,13 +464,13 @@ function DashboardPage() {
                         </div>
                       ))}
                       {mySellings.length > 3 ? (
-                        <Link to="/sell" className="selling-view-more">
-                          View {mySellings.length - 3} More →
-                        </Link>
+                        <button onClick={() => updateSection('sell')} className="selling-view-more">
+                          {t('View')} {mySellings.length - 3} {t('More')} →
+                        </button>
                       ) : (
-                        <Link to="/sell" className="selling-view-more">
-                          Manage Listings →
-                        </Link>
+                        <button onClick={() => updateSection('sell')} className="selling-view-more">
+                          {t('Manage Listings')} →
+                        </button>
                       )}
                     </>
                   )}
@@ -419,13 +479,58 @@ function DashboardPage() {
             </>
           )}
 
+          {/* ── Quick Actions ── */}
+          {activeSection === 'overview' && (
+            <div className="widget widget--actions" id="quick-actions">
+              <div className="widget__header">
+                <Sprout size={18} /> <span>{t('Quick Actions')}</span>
+              </div>
+              <div className="actions__grid">
+                <button onClick={() => updateSection('predict')} className="action-btn action-btn--green" id="action-predict">
+                  <span className="action-btn__icon">🌾</span>
+                  <span className="action-btn__text">{t('Predict Crop')}</span>
+                  <ArrowRight size={15} />
+                </button>
+                <button
+                  className="action-btn action-btn--teal"
+                  id="action-chat"
+                  onClick={() => document.getElementById('chatbot-toggle')?.click()}
+                >
+                  <span className="action-btn__icon">🤖</span>
+                  <span className="action-btn__text">{t('Ask AI Advisor')}</span>
+                  <ArrowRight size={15} />
+                </button>
+                <a href="#calendar" className="action-btn action-btn--brown" id="action-calendar">
+                  <span className="action-btn__icon">📅</span>
+                  <span className="action-btn__text">{t('Crop Calendar')}</span>
+                  <ArrowRight size={15} />
+                </a>
+                <a href="#tips" className="action-btn action-btn--amber" id="action-tips">
+                  <span className="action-btn__icon">💡</span>
+                  <span className="action-btn__text">{t('Farming Tips')}</span>
+                  <ArrowRight size={15} />
+                </a>
+                <a href="#fertilizer-guide" className="action-btn action-btn--purple" id="action-fertilizer">
+                  <span className="action-btn__icon">🧪</span>
+                  <span className="action-btn__text">{t('Fertilizer Guide')}</span>
+                  <ArrowRight size={15} />
+                </a>
+                <button onClick={() => updateSection('sell')} className="action-btn action-btn--orange" id="action-sell">
+                  <span className="action-btn__icon">🛒</span>
+                  <span className="action-btn__text">{t('Sell Your Crop')}</span>
+                  <ArrowRight size={15} />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Weather Widget ── */}
           {(activeSection === 'overview' || activeSection === 'weather') && (
-            <div className="widget widget--weather widget--wide" id="weather-widget">
+            <div className="widget widget--weather widget--full" id="weather-widget">
               <div className="widget__header">
                 <CloudSun size={18} />
                 <span>
-                  Weather Forecast
+                  {t('Weather Forecast')}
                   {weather?.location && (
                     <span className="weather__location-label"> — {weather.location.name}, {weather.location.state}</span>
                   )}
@@ -439,9 +544,9 @@ function DashboardPage() {
                       fetch(`http://localhost:5000/api/weather?${params}`)
                         .then(r => r.json()).then(setWeather).finally(() => setWeatherLoading(false));
                     }}
-                    title="Refresh"
+                    title={t("Refresh")}
                   >
-                    <RefreshCw size={13} /> Refresh
+                    <RefreshCw size={13} /> {t('Refresh')}
                   </button>
                 )}
               </div>
@@ -468,13 +573,13 @@ function DashboardPage() {
                     </div>
                     <div className="weather__details">
                       <div className="weather__detail">
-                        <Droplets size={14} /> {weather.current.humidity}% Humidity
+                        <Droplets size={14} /> {weather.current.humidity}% {t('Humidity')}
                       </div>
                       <div className="weather__detail">
-                        <Wind size={14} /> Wind {weather.current.wind} km/h
+                        <Wind size={14} /> {t('Wind')} {weather.current.wind} {t('km/h')}
                       </div>
                       <div className="weather__detail">
-                        <CloudRain size={14} /> {weather.forecast?.[0]?.rainProb ?? 0}% Rain today
+                        <CloudRain size={14} /> {weather.forecast?.[0]?.rainProb ?? 0}% {t('Rain today')}
                       </div>
                     </div>
                   </div>
@@ -486,9 +591,9 @@ function DashboardPage() {
                         key={day.date}
                         className={`forecast__day ${i === 1 && weather.rainAlert ? 'forecast__day--rain-alert' : ''}`}
                       >
-                        <span className="forecast__label">{formatDay(day.date, i)}</span>
+                        <span className="forecast__label">{t(formatDay(day.date, i))}</span>
                         <span className="forecast__icon">{day.icon}</span>
-                        <span className="forecast__desc">{day.desc}</span>
+                        <span className="forecast__desc">{t(day.desc)}</span>
                         <div className="forecast__temps">
                           <span className="forecast__max">{day.maxTemp}°</span>
                           <span className="forecast__min">{day.minTemp}°</span>
@@ -501,58 +606,13 @@ function DashboardPage() {
                         </div>
                         <span className="forecast__rain-pct">{day.rainProb}%</span>
                         {i === 1 && weather.rainAlert && (
-                          <span className="forecast__alert-tag">⚠️ Rain Alert</span>
+                          <span className="forecast__alert-tag">⚠️ {t('Rain Alert')}</span>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
               ) : null}
-            </div>
-          )}
-
-          {/* ── Quick Actions ── */}
-          {activeSection === 'overview' && (
-            <div className="widget widget--actions" id="quick-actions">
-              <div className="widget__header">
-                <Sprout size={18} /> <span>Quick Actions</span>
-              </div>
-              <div className="actions__grid">
-                <Link to="/predict" className="action-btn action-btn--green" id="action-predict">
-                  <span className="action-btn__icon">🌾</span>
-                  <span className="action-btn__text">Predict Crop</span>
-                  <ArrowRight size={15} />
-                </Link>
-                <button
-                  className="action-btn action-btn--teal"
-                  id="action-chat"
-                  onClick={() => document.getElementById('chatbot-toggle')?.click()}
-                >
-                  <span className="action-btn__icon">🤖</span>
-                  <span className="action-btn__text">Ask AI Advisor</span>
-                  <ArrowRight size={15} />
-                </button>
-                <a href="#calendar" className="action-btn action-btn--brown" id="action-calendar">
-                  <span className="action-btn__icon">📅</span>
-                  <span className="action-btn__text">Crop Calendar</span>
-                  <ArrowRight size={15} />
-                </a>
-                <a href="#tips" className="action-btn action-btn--amber" id="action-tips">
-                  <span className="action-btn__icon">💡</span>
-                  <span className="action-btn__text">Farming Tips</span>
-                  <ArrowRight size={15} />
-                </a>
-                <a href="#fertilizer-guide" className="action-btn action-btn--purple" id="action-fertilizer">
-                  <span className="action-btn__icon">🧪</span>
-                  <span className="action-btn__text">Fertilizer Guide</span>
-                  <ArrowRight size={15} />
-                </a>
-                <Link to="/sell" className="action-btn action-btn--orange" id="action-sell">
-                  <span className="action-btn__icon">🛒</span>
-                  <span className="action-btn__text">Sell Your Crop</span>
-                  <ArrowRight size={15} />
-                </Link>
-              </div>
             </div>
           )}
 
@@ -570,7 +630,7 @@ function DashboardPage() {
               {predictions.length === 0 ? (
                 <div className="widget__empty">
                   <p>🌱 No predictions yet.</p>
-                  <Link to="/predict" className="widget__empty-link">Make your first prediction →</Link>
+                  <button onClick={() => updateSection('predict')} className="widget__empty-link">Make your first prediction →</button>
                 </div>
               ) : (
                 <div className="history__list">
@@ -594,7 +654,7 @@ function DashboardPage() {
 
           {/* ── Mandi Prices Widget ── */}
           {activeSection === 'mandi' && (
-            <div className="widget widget--mandi widget--wide" id="mandi-prices">
+            <div className="widget widget--mandi widget--full" id="mandi-prices">
               <div className="widget__header">
                 <ShoppingCart size={18} />
                 <span>
@@ -697,55 +757,94 @@ function DashboardPage() {
 
           {/* ── Seasonal Crop Calendar ── */}
           {activeSection === 'calendar' && (
-            <div className="widget widget--calendar" id="calendar">
+            <div className="widget widget--calendar widget--full" id="calendar">
               <div className="widget__header">
                 <Calendar size={18} />
-                <span>Seasonal Crop Calendar</span>
-                <span className="widget__badge">{new Date().toLocaleString('default', { month: 'long' })}</span>
+                <span>{t('Seasonal Crop Calendar')}</span>
+                <span className="widget__badge">{t(new Date().toLocaleString('default', { month: 'long' }))}</span>
               </div>
-              <div className="calendar__season">
-                <span className="calendar__season-tag">{calendar.season}</span>
-              </div>
-              <div className="calendar__crops">
-                {calendar.crops.map((crop, i) => (
-                  <div className="calendar__crop-pill" key={i}>
-                    {crop}
+
+              <div className="calendar__full-layout">
+                {/* Main Month Focus */}
+                <div className="calendar__focus-card">
+                  <div className="calendar__focus-header">
+                    <div className="calendar__focus-month">
+                      <h3 className="calendar__focus-title">{t(new Date().toLocaleString('default', { month: 'long' }))}</h3>
+                      <span className="calendar__season-badge">{t(calendar.season)}</span>
+                    </div>
+                    <div className="calendar__focus-icon">📅</div>
                   </div>
-                ))}
+                  
+                  <div className="calendar__section-label">{t('Recommended Crops to Sow/Harvest')}</div>
+                  <div className="calendar__crops-grid">
+                    {calendar.crops.map((crop, i) => (
+                      <div className="calendar__crop-item" key={i}>
+                        <span className="calendar__crop-text">{t(crop)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="calendar__section-label">{t('Expert Farming Tips for this Month')}</div>
+                  <div className="calendar__tips-box">
+                    <Lightbulb size={20} className="calendar__tips-icon" />
+                    <p className="calendar__tips-text">{t(calendar.tips)}</p>
+                  </div>
+                </div>
+
+                {/* Upcoming Months Preview */}
+                <div className="calendar__upcoming-section">
+                  <div className="calendar__upcoming-header">{t('Upcoming Agricultural Seasons')}</div>
+                  <div className="calendar__upcoming-grid">
+                    {[1, 2, 3].map(offset => {
+                      const nextMonth = (new Date().getMonth() + offset) % 12;
+                      const nextData = MONTH_CROPS[nextMonth];
+                      const monthName = new Date(2024, nextMonth).toLocaleString('default', { month: 'short' });
+                      return (
+                        <div key={nextMonth} className="calendar__month-card">
+                          <div className="calendar__month-name">{t(monthName)}</div>
+                          <div className="calendar__month-season">{t(nextData.season)}</div>
+                          <div className="calendar__month-crops-list">
+                            {nextData.crops.slice(0, 3).map((c, idx) => (
+                              <span key={idx} className="calendar__month-crop-mini">{t(c)}</span>
+                            ))}
+                            {nextData.crops.length > 3 && <span className="calendar__more-tag">+{nextData.crops.length - 3} {t('more')}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="calendar__info-banner">
+                    <BadgeCheck size={18} />
+                    <span>{t('Sowing dates are generalized for most Indian states. Please check local Mandi alerts for precise timing.')}</span>
+                  </div>
+                </div>
               </div>
-              <p className="calendar__note">
-                🗓️ These crops are best sown / harvested during this month in most Indian regions.
-              </p>
             </div>
           )}
 
           {/* ── Farming Tips ── */}
           {activeSection === 'tips' && (
-            <div className="widget widget--tips" id="tips">
+            <div className="widget widget--tips widget--full" id="tips">
               <div className="widget__header">
-                <Lightbulb size={18} /> <span>Farming Tip of the Day</span>
-                <button
-                  className="widget__action-btn"
-                  onClick={() => setTipIndex((i) => (i + 1) % TIPS.length)}
-                  title="Next tip"
-                >
-                  <RefreshCw size={14} /> Next
-                </button>
+                <Lightbulb size={18} />
+                <span>{t('Expert Farming Tips')}</span>
+                <span className="widget__badge">💡 {TIPS.length} {t('Pro Tips')}</span>
               </div>
-              <div className="tip__body" key={tipIndex}>
-                <div className="tip__emoji">{tip.emoji}</div>
-                <div>
-                  <h4 className="tip__title">{tip.title}</h4>
-                  <p className="tip__text">{tip.tip}</p>
-                </div>
-              </div>
-              <div className="tip__dots">
-                {TIPS.map((_, i) => (
-                  <button
-                    key={i}
-                    className={`tip__dot ${i === tipIndex ? 'tip__dot--active' : ''}`}
-                    onClick={() => setTipIndex(i)}
-                  />
+              
+              <div className="tips__grid">
+                {TIPS.map((tip, i) => (
+                  <div className="tip-card" key={i} id={`tip-card-${i}`}>
+                    <div className="tip-card__header">
+                      <div className="tip-card__emoji">{tip.emoji}</div>
+                      <h4 className="tip-card__title">{t(tip.title)}</h4>
+                    </div>
+                    <p className="tip-card__text">{t(tip.tip)}</p>
+                    <div className="tip-card__footer">
+                      <span className="tip-card__tag">#{t('FarmingPro')}</span>
+                      <span className="tip-card__read-time">2 {t('min read')}</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

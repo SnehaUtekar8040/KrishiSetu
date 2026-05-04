@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Sprout, Loader2, ArrowLeft, Thermometer, Droplets, CloudRain, TestTubes, Atom, Leaf, FlaskConical } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Sprout, Loader2, Thermometer, Droplets, CloudRain, TestTubes, Atom, Leaf, FlaskConical } from 'lucide-react';
 import { useTranslation } from '../lib/TranslationContext';
-import './PredictPage.css';
+import './CropPredictor.css';
 
 const SOIL_TYPES = ['Loamy Soil', 'Peaty Soil', 'Sandy Soil', 'Clay Soil'];
 
@@ -18,7 +17,7 @@ const initialForm = {
   Soil: 'Loamy Soil',
 };
 
-function PredictPage() {
+function CropPredictor({ onPredictionSuccess }) {
   const { t } = useTranslation();
   const [form, setForm] = useState(initialForm);
   const [result, setResult] = useState(null);
@@ -64,6 +63,8 @@ function PredictPage() {
           temp: form.Temperature,
         });
         localStorage.setItem('predictionHistory', JSON.stringify(history));
+        
+        if (onPredictionSuccess) onPredictionSuccess();
       } else {
         setError(data.error || 'Prediction failed. Please try again.');
       }
@@ -86,60 +87,46 @@ function PredictPage() {
   ];
 
   return (
-    <div className="predict-page">
-      <div className="predict-page__bg"></div>
-      <div className="container predict-page__container">
-        <Link to="/" className="predict-page__back" id="predict-back-btn">
-          <ArrowLeft size={18} />
-          {t('Back to Home')}
-        </Link>
+    <div className="crop-predictor">
+      <div className="widget__header">
+        <Sprout size={20} />
+        <span>{t('AI Crop Predictor')}</span>
+      </div>
 
-        <div className="predict-page__header">
-          <div className="predict-page__badge">
-            <Sprout size={16} />
-            {t('AI Crop Predictor')}
-          </div>
-          <h1 className="predict-page__title">{t('Find the Perfect Crop for Your Land')}</h1>
-          <p className="predict-page__subtitle">
-            {t('Enter your soil and climate parameters below. Our machine learning model will analyze the data and suggest the most suitable crop.')}
-          </p>
-        </div>
-
-        <form className="predict-form" onSubmit={handleSubmit} id="predict-form">
-          <div className="predict-form__grid">
+      {!result ? (
+        <form onSubmit={handleSubmit} className="predictor-form">
+          <div className="predictor-grid">
             {fields.map((field) => (
-              <div className="predict-form__group" key={field.name}>
-                <label htmlFor={`predict-${field.name}`} className="predict-form__label">
-                  {field.icon}
+              <div key={field.name} className="input-group">
+                <label className="input-label">
+                  <span className="input-icon">{field.icon}</span>
                   {field.label}
                 </label>
                 <input
-                  id={`predict-${field.name}`}
-                  name={field.name}
                   type={field.type}
-                  step={field.step}
-                  placeholder={field.placeholder}
+                  name={field.name}
                   value={form[field.name]}
                   onChange={handleChange}
+                  step={field.step}
+                  placeholder={field.placeholder}
                   required
-                  className="predict-form__input"
+                  className="predictor-input"
                 />
               </div>
             ))}
-            <div className="predict-form__group predict-form__group--full">
-              <label htmlFor="predict-Soil" className="predict-form__label">
-                <Sprout size={18} />
+            <div className="input-group">
+              <label className="input-label">
+                <span className="input-icon"><Sprout size={18} /></span>
                 {t('Soil Type')}
               </label>
               <select
-                id="predict-Soil"
                 name="Soil"
                 value={form.Soil}
                 onChange={handleChange}
-                className="predict-form__input predict-form__select"
+                className="predictor-input"
               >
-                {SOIL_TYPES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {SOIL_TYPES.map((type) => (
+                  <option key={type} value={type}>{t(type)}</option>
                 ))}
               </select>
             </div>
@@ -147,44 +134,41 @@ function PredictPage() {
 
           <button
             type="submit"
+            className="predictor-submit"
             disabled={loading}
-            className="btn btn--primary btn--lg predict-form__submit"
-            id="predict-submit-btn"
           >
             {loading ? (
               <>
                 <Loader2 size={20} className="spin" />
-                {t('Analyzing...')}
+                {t('Analyzing Data...')}
               </>
             ) : (
-              <>
-                <Sprout size={20} />
-                {t('Predict Crop')}
-              </>
+              t('Predict Best Crop')
             )}
           </button>
+          
+          {error && <div className="predictor-error">{error}</div>}
         </form>
-
-        {/* Result */}
-        {result && (
-          <div className="predict-result animate-fade-in-up" id="predict-result">
-            <div className="predict-result__icon">🌾</div>
-            <h2 className="predict-result__title">{t('Recommended Crop')}</h2>
-            <p className="predict-result__crop">{t(result)}</p>
-            <p className="predict-result__desc">
-              {t('Based on your soil and climate data, our AI recommends growing')} <strong>{t(result)}</strong> {t('for maximum yield.')}
+      ) : (
+        <div className="predictor-result">
+          <div className="result-card">
+            <div className="result-icon">✨</div>
+            <h2 className="result-title">{t('Recommended Crop')}</h2>
+            <div className="result-value">{t(result)}</div>
+            <p className="result-note">
+              {t('Based on your soil and weather conditions, this crop is likely to give the highest yield.')}
             </p>
+            <button
+              onClick={() => setResult(null)}
+              className="result-reset"
+            >
+              {t('New Prediction')}
+            </button>
           </div>
-        )}
-
-        {error && (
-          <div className="predict-error animate-fade-in-up" id="predict-error">
-            <p>{error}</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default PredictPage;
+export default CropPredictor;

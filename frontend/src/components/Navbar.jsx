@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Leaf, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, X, Leaf, LayoutDashboard, LogOut, Globe } from 'lucide-react';
+import { useTranslation } from '../lib/TranslationContext';
 import './Navbar.css';
 
 function Navbar() {
@@ -9,6 +10,23 @@ function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useTranslation();
+
+  const SUPPORTED_LANGUAGES = [
+    { code: 'en', name: 'English' },
+    { code: 'hi', name: 'हिंदी' },
+    { code: 'bn', name: 'বাংলা' },
+    { code: 'te', name: 'తెలుగు' },
+    { code: 'mr', name: 'मराठी' },
+    { code: 'ta', name: 'தமிழ்' },
+    { code: 'ur', name: 'اردو' },
+    { code: 'gu', name: 'ગુજરાતી' },
+    { code: 'kn', name: 'ಕನ್ನಡ' },
+    { code: 'ml', name: 'മലയാളം' },
+    { code: 'pa', name: 'ਪੰਜਾਬੀ' },
+    { code: 'or', name: 'ଓଡ଼ିଆ' },
+    { code: 'as', name: 'অসমীয়া' }
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -41,30 +59,43 @@ function Navbar() {
 
         <div className={`navbar__links ${menuOpen ? 'navbar__links--open' : ''}`}>
           <Link to="/" className={`navbar__link ${location.pathname === '/' ? 'navbar__link--active' : ''}`} id="nav-home">
-            Home
+            {t('Home')}
           </Link>
           <Link to="/predict" className={`navbar__link ${location.pathname === '/predict' ? 'navbar__link--active' : ''}`} id="nav-predict">
-            Crop Predictor
+            {t('Crop Predictor')}
           </Link>
-          <a href="#about" className="navbar__link" id="nav-about">About Us</a>
-          <a href="#contact" className="navbar__link" id="nav-contact">Contact</a>
+          <a href="#about" className="navbar__link" id="nav-about">{t('About Us')}</a>
+          <a href="#contact" className="navbar__link" id="nav-contact">{t('Contact')}</a>
         </div>
 
         <div className="navbar__right">
+          <div className="navbar__lang-selector">
+            <Globe size={16} />
+            <select 
+              value={language} 
+              onChange={(e) => setLanguage(e.target.value)}
+              className="navbar__lang-select"
+            >
+              {SUPPORTED_LANGUAGES.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.name}</option>
+              ))}
+            </select>
+          </div>
+
           {isLoggedIn ? (
             <>
               <Link to="/dashboard" className="navbar__dashboard-btn" id="nav-dashboard">
                 <LayoutDashboard size={16} />
-                Dashboard
+                {t('Dashboard')}
               </Link>
               <button className="navbar__logout-btn" onClick={handleLogout} id="nav-logout">
                 <LogOut size={15} />
-                Logout
+                {t('Logout')}
               </button>
             </>
           ) : (
             <Link to="/auth" className="navbar__cta" id="nav-cta">
-              Login / Sign Up
+              {t('Login / Sign Up')}
             </Link>
           )}
         </div>

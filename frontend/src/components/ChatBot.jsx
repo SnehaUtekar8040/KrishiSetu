@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Sprout } from 'lucide-react';
+import { useTranslation } from '../lib/TranslationContext';
 import './ChatBot.css';
 
 function ChatBot() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Namaste! 🌱 I\'m your KrishiMitra farming assistant. Ask me anything about crops, soil, irrigation, pest control, or farming techniques!',
+      content: t("Namaste! 🌱 I'm your KrishiMitra farming assistant. Ask me anything about crops, soil, irrigation, pest control, or farming techniques!"),
     },
   ]);
   const [input, setInput] = useState('');
@@ -44,12 +46,12 @@ function ChatBot() {
       const data = await response.json();
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.reply || 'Sorry, I could not process your request.' },
+        { role: 'assistant', content: data.reply || t('Sorry, I could not process your request.') },
       ]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Sorry, I could not connect to the server. Please try again.' },
+        { role: 'assistant', content: t('Sorry, I could not connect to the server. Please try again.') },
       ]);
     } finally {
       setLoading(false);
@@ -76,10 +78,10 @@ function ChatBot() {
               <Sprout size={20} />
             </div>
             <div>
-              <h3>KrishiMitra AI</h3>
+              <h3>{t('KrishiMitra AI')}</h3>
               <span className="chatbot__status">
                 <span className="chatbot__status-dot"></span>
-                Online
+                {t('Online')}
               </span>
             </div>
           </div>
@@ -127,7 +129,7 @@ function ChatBot() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about farming..."
+            placeholder={t("Ask about farming...")}
             className="chatbot__input"
             disabled={loading}
             id="chatbot-input"

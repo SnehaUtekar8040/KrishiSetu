@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, User, Phone, MapPin, Lock, Eye, EyeOff, Map } from 'lucide-react';
+import { Leaf, User, Phone, MapPin, Lock, Eye, EyeOff, Map, ChevronLeft } from 'lucide-react';
+import { useTranslation } from '../lib/TranslationContext';
 import './AuthPage.css';
 
 const INDIAN_STATES = [
@@ -13,20 +14,24 @@ const INDIAN_STATES = [
 ];
 
 function AuthPage() {
+  const { t } = useTranslation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null); // 'farmer' or 'vendor'
 
   // Sign In form state — phone + password
   const [loginData, setLoginData] = useState({ phone: '', password: '' });
 
-  // Sign Up form state — farmer fields
+  // Sign Up form state
   const [signupData, setSignupData] = useState({
     name: '',
     phone: '',
     village: '',
     district: '',
     state: '',
+    location: '',
+    mandiLocation: '',
     password: '',
     confirmPassword: '',
   });
@@ -61,7 +66,7 @@ function AuthPage() {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData),
+        body: JSON.stringify({ ...loginData, role: selectedRole }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -80,11 +85,21 @@ function AuthPage() {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    const { name, phone, village, district, state, password, confirmPassword } = signupData;
-    if (!name || !phone || !village || !district || !state || !password) {
+    const { name, phone, village, district, state, location, mandiLocation, password, confirmPassword } = signupData;
+    
+    if (!name || !phone || !password) {
       setError('Please fill in all fields');
       return;
     }
+    if (selectedRole === 'farmer' && (!village || !district || !state)) {
+      setError('Please fill in all location fields');
+      return;
+    }
+    if (selectedRole === 'vendor' && (!location || !mandiLocation)) {
+      setError('Please fill in all location fields');
+      return;
+    }
+
     if (!/^[6-9]\d{9}$/.test(phone)) {
       setError('Enter a valid 10-digit Indian mobile number');
       return;
@@ -98,17 +113,28 @@ function AuthPage() {
       return;
     }
     setLoading(true);
+
+    const payload = { role: selectedRole, name, phone, password };
+    if (selectedRole === 'farmer') {
+      payload.village = village;
+      payload.district = district;
+      payload.state = state;
+    } else {
+      payload.location = location;
+      payload.mandiLocation = mandiLocation;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, village, district, state, password }),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (response.ok) {
         setSuccess('Account created! You can now sign in.');
         setError('');
-        setSignupData({ name: '', phone: '', village: '', district: '', state: '', password: '', confirmPassword: '' });
+        setSignupData({ name: '', phone: '', village: '', district: '', state: '', location: '', mandiLocation: '', password: '', confirmPassword: '' });
         setTimeout(() => {
           setIsSignUp(false);
           setSuccess('');
@@ -131,6 +157,40 @@ function AuthPage() {
     setShowConfirmPassword(false);
   };
 
+  if (!selectedRole) {
+    return (
+      <div className="auth-page" id="auth-page">
+        <div className="auth-page__bg">
+          <div className="auth-page__bg-circle auth-page__bg-circle--1"></div>
+          <div className="auth-page__bg-circle auth-page__bg-circle--2"></div>
+          <div className="auth-page__bg-circle auth-page__bg-circle--3"></div>
+          <div className="auth-page__bg-wheat">🌾</div>
+          <div className="auth-page__bg-sprout">🌱</div>
+        </div>
+        
+        <div className="auth-role-container">
+          <h1 className="auth-role-title">{t('Welcome to KrishiSetu')}</h1>
+          <p className="auth-role-subtitle">{t('Please select your role to continue')}</p>
+          <div className="auth-role-cards">
+            <div className="auth-role-card" onClick={() => setSelectedRole('farmer')}>
+              <span className="auth-role-icon">🌾</span>
+              <h3>{t('I am a Farmer')}</h3>
+              <p>{t('Sell crops, get predictions, and weather insights.')}</p>
+            </div>
+            <div className="auth-role-card" onClick={() => setSelectedRole('vendor')}>
+              <span className="auth-role-icon">🛒</span>
+              <h3>{t('I am a Vendor')}</h3>
+              <p>{t('Buy fresh crops directly from farmers.')}</p>
+            </div>
+          </div>
+          <Link to="/" className="auth-role-back">
+            <ChevronLeft size={18} /> {t('Back to Home')}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-page" id="auth-page">
       {/* Animated background elements */}
@@ -142,11 +202,11 @@ function AuthPage() {
         <div className="auth-page__bg-sprout">🌱</div>
       </div>
 
-      {/* Back to home link */}
-      <Link to="/" className="auth-page__back" id="auth-back-btn">
-        <Leaf size={18} />
-        <span>KrishiSetu</span>
-      </Link>
+      {/* Back to Role Selection */}
+      <button type="button" className="auth-page__back" id="auth-back-btn" onClick={() => setSelectedRole(null)}>
+        <ChevronLeft size={18} />
+        <span>{t('Change Role')}</span>
+      </button>
 
       {/* Main auth container */}
       <div className={`auth-container ${isSignUp ? 'auth-container--signup' : ''}`} id="auth-container">
@@ -157,8 +217,8 @@ function AuthPage() {
             <div className="auth-form__logo">
               <Leaf size={28} />
             </div>
-            <h1 className="auth-form__title">Join KrishiSetu</h1>
-            <p className="auth-form__subtitle">Create your farmer account in seconds</p>
+            <h1 className="auth-form__title">{t('Join KrishiSetu')}</h1>
+            <p className="auth-form__subtitle">{t('Create your account in seconds')}</p>
 
             {error && isSignUp && (
               <div className="auth-form__error" id="signup-error">{error}</div>
@@ -203,58 +263,98 @@ function AuthPage() {
               />
             </div>
 
-            {/* Village */}
-            <div className="auth-form__input-group">
-              <div className="auth-form__input-icon">
-                <MapPin size={17} />
-              </div>
-              <input
-                type="text"
-                name="village"
-                placeholder="Village / Town Name"
-                value={signupData.village}
-                onChange={handleSignupChange}
-                className="auth-form__input"
-                id="signup-village"
-                autoComplete="address-level2"
-              />
-            </div>
+            {selectedRole === 'farmer' && (
+              <>
+                {/* Village */}
+                <div className="auth-form__input-group">
+                  <div className="auth-form__input-icon">
+                    <MapPin size={17} />
+                  </div>
+                  <input
+                    type="text"
+                    name="village"
+                    placeholder="Village / Town Name"
+                    value={signupData.village}
+                    onChange={handleSignupChange}
+                    className="auth-form__input"
+                    id="signup-village"
+                    autoComplete="address-level2"
+                  />
+                </div>
 
-            {/* District */}
-            <div className="auth-form__input-group">
-              <div className="auth-form__input-icon">
-                <Map size={17} />
-              </div>
-              <input
-                type="text"
-                name="district"
-                placeholder="District Name"
-                value={signupData.district}
-                onChange={handleSignupChange}
-                className="auth-form__input"
-                id="signup-district"
-                autoComplete="address-level1"
-              />
-            </div>
+                {/* District */}
+                <div className="auth-form__input-group">
+                  <div className="auth-form__input-icon">
+                    <Map size={17} />
+                  </div>
+                  <input
+                    type="text"
+                    name="district"
+                    placeholder="District Name"
+                    value={signupData.district}
+                    onChange={handleSignupChange}
+                    className="auth-form__input"
+                    id="signup-district"
+                    autoComplete="address-level1"
+                  />
+                </div>
 
-            {/* State */}
-            <div className="auth-form__input-group auth-form__input-group--select">
-              <div className="auth-form__input-icon">
-                <Map size={17} />
-              </div>
-              <select
-                name="state"
-                value={signupData.state}
-                onChange={handleSignupChange}
-                className="auth-form__select"
-                id="signup-state"
-              >
-                <option value="" disabled>Select Your State</option>
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+                {/* State */}
+                <div className="auth-form__input-group auth-form__input-group--select">
+                  <div className="auth-form__input-icon">
+                    <Map size={17} />
+                  </div>
+                  <select
+                    name="state"
+                    value={signupData.state}
+                    onChange={handleSignupChange}
+                    className="auth-form__select"
+                    id="signup-state"
+                  >
+                    <option value="" disabled>Select Your State</option>
+                    {INDIAN_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {selectedRole === 'vendor' && (
+              <>
+                {/* Location */}
+                <div className="auth-form__input-group">
+                  <div className="auth-form__input-icon">
+                    <MapPin size={17} />
+                  </div>
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="Business Location"
+                    value={signupData.location}
+                    onChange={handleSignupChange}
+                    className="auth-form__input"
+                    id="signup-location"
+                  />
+                </div>
+
+                {/* Mandi Location */}
+                <div className="auth-form__input-group">
+                  <div className="auth-form__input-icon">
+                    <Map size={17} />
+                  </div>
+                  <input
+                    type="text"
+                    name="mandiLocation"
+                    placeholder="Mandi Location"
+                    value={signupData.mandiLocation}
+                    onChange={handleSignupChange}
+                    className="auth-form__input"
+                    id="signup-mandi-location"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Password */}
             <div className="auth-form__input-group">
@@ -401,9 +501,9 @@ function AuthPage() {
               )}
             </button>
 
-            {/* Farmer info badge */}
+            {/* User info badge */}
             <div className="auth-form__info-badge">
-              🌾 Built for Indian Farmers
+              {selectedRole === 'farmer' ? '🌾 Built for Indian Farmers' : '🛒 Built for Reliable Vendors'}
             </div>
 
             {/* Mobile only toggle */}
@@ -422,30 +522,31 @@ function AuthPage() {
             </svg>
           </div>
           <div className="auth-overlay__panels">
-            {/* Left overlay panel — shown when signup is active */}
+            {/* Left overlay panel — shown during LOGIN mode to invite users to SIGN UP */}
             <div className="auth-overlay__panel auth-overlay__panel--left" id="overlay-left">
-              <div className="auth-overlay__emoji-stack">
-                <span>🌾</span>
-                <span>🌱</span>
-                <span>🏡</span>
-              </div>
-              <h2>Already Registered?</h2>
-              <p>Welcome back, farmer! Sign in to access crop predictions, weather insights and your personal dashboard.</p>
-              <button className="auth-overlay__btn" onClick={toggleMode} id="overlay-signin-btn">
-                SIGN IN
-              </button>
-            </div>
-            {/* Right overlay panel — shown when login is active */}
-            <div className="auth-overlay__panel auth-overlay__panel--right" id="overlay-right">
               <div className="auth-overlay__emoji-stack">
                 <span>🌱</span>
                 <span>🚜</span>
                 <span>☀️</span>
               </div>
-              <h2>New Farmer?</h2>
-              <p>Join thousands of farmers using KrishiSetu for smarter crop decisions, soil insights, and AI-powered advice.</p>
+              <h2>{t(`New ${selectedRole === 'farmer' ? 'Farmer' : 'Vendor'}?`)}</h2>
+              <p>{t('If you don\'t have an account, create one now to start trading.')}</p>
               <button className="auth-overlay__btn" onClick={toggleMode} id="overlay-signup-btn">
-                REGISTER NOW
+                {t('CREATE ACCOUNT')}
+              </button>
+            </div>
+            
+            {/* Right overlay panel — shown during SIGNUP mode to invite users to SIGN IN */}
+            <div className="auth-overlay__panel auth-overlay__panel--right" id="overlay-right">
+              <div className="auth-overlay__emoji-stack">
+                <span>🌾</span>
+                <span>🌱</span>
+                <span>🏡</span>
+              </div>
+              <h2>{t('Already Registered?')}</h2>
+              <p>{t('Welcome back! Sign in to access your dashboard.')}</p>
+              <button className="auth-overlay__btn" onClick={toggleMode} id="overlay-signin-btn">
+                {t('SIGN IN')}
               </button>
             </div>
           </div>

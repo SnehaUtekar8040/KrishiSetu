@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Sprout, Sun, Droplets, Mail, Phone, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '../lib/TranslationContext';
 import './HomePage.css';
 
 const aboutCards = [
@@ -34,6 +35,7 @@ const iconMap = {
 };
 
 function HomePage() {
+  const { t } = useTranslation();
   const [activeCard, setActiveCard] = useState(0);
 
   const nextCard = useCallback(() => {
@@ -70,22 +72,21 @@ function HomePage() {
           <div className="hero__text">
             <div className="hero__badge animate-fade-in-up">
               <Sprout size={16} />
-              <span>Smart Farming Solutions</span>
+              <span>{t('Smart Farming Solutions')}</span>
             </div>
             <h1 className="hero__title animate-fade-in-up delay-100">
-              Grow Smarter with <span className="hero__title-highlight">KrishiMitra</span>
+              {t('Grow Smarter with')} <span className="hero__title-highlight">{t('KrishiMitra')}</span>
             </h1>
             <p className="hero__subtitle animate-fade-in-up delay-200">
-              Harness the power of AI to predict the perfect crop for your soil. 
-              Get personalized farming recommendations through our intelligent chatbot.
+              {t('Harness the power of AI to predict the perfect crop for your soil. Get personalized farming recommendations through our intelligent chatbot.')}
             </p>
             <div className="hero__actions animate-fade-in-up delay-300">
               <Link to="/predict" className="btn btn--primary" id="hero-predict-btn">
                 <Sprout size={18} />
-                Predict Your Crop
+                {t('Predict Your Crop')}
               </Link>
               <a href="#about" className="btn btn--outline" id="hero-about-btn">
-                Learn More
+                {t('Learn More')}
               </a>
             </div>
             <div className="hero__stats animate-fade-in-up delay-400">

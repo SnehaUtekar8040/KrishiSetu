@@ -6,6 +6,7 @@ import {
   ShoppingBag, Plus, Star, CheckCircle2, AlertCircle,
   Filter, ChevronDown, Store,
 } from 'lucide-react';
+import { useTranslation } from '../lib/TranslationContext';
 import './SellPage.css';
 
 const CROP_OPTIONS = [
@@ -49,6 +50,7 @@ const timeAgo = (dateStr) => {
 
 function SellPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   // ── Form state ──
@@ -171,7 +173,7 @@ function SellPage() {
       {/* ── Page Header ── */}
       <div className="sell-page__topbar">
         <Link to="/dashboard" className="sell-back-btn" id="sell-back-btn">
-          <ArrowLeft size={16} /> Dashboard
+          <ArrowLeft size={16} /> {t('Dashboard')}
         </Link>
         <div className="sell-page__brand">
           <Leaf size={18} />
@@ -186,10 +188,10 @@ function SellPage() {
       {/* ── Hero Strip ── */}
       <div className="sell-hero">
         <div className="sell-hero__inner">
-          <div className="sell-hero__badge"><Store size={14} /> Crop Marketplace</div>
-          <h1 className="sell-hero__title">Sell Your Crop Directly to Buyers</h1>
+          <div className="sell-hero__badge"><Store size={14} /> {t('Crop Marketplace')}</div>
+          <h1 className="sell-hero__title">{t('Sell Your Crop Directly to Buyers')}</h1>
           <p className="sell-hero__sub">
-            Post your harvest, set your price, and connect with buyers across India — no middlemen.
+            {t('Post your harvest, set your price, and connect with buyers across India — no middlemen.')}
           </p>
         </div>
       </div>
@@ -203,7 +205,7 @@ function SellPage() {
         <aside className="sell-form-panel">
           <div className="sell-panel__header">
             <Plus size={18} />
-            <span>Post Your Crop</span>
+            <span>{t('Post Your Crop')}</span>
           </div>
 
           {/* Farmer info strip */}
@@ -222,7 +224,7 @@ function SellPage() {
             {/* Crop name */}
             <div className="sell-form__group">
               <label className="sell-form__label" htmlFor="sell-crop">
-                <Wheat size={14} /> Crop Name *
+                <Wheat size={14} /> {t('Crop Name')} *
               </label>
               <select
                 id="sell-crop"
@@ -311,16 +313,15 @@ function SellPage() {
               />
             </div>
 
-            {/* Description */}
             <div className="sell-form__group">
               <label className="sell-form__label" htmlFor="sell-desc">
-                Additional Details
+                {t('Additional Details')}
               </label>
               <textarea
                 id="sell-desc"
                 className="sell-form__input sell-form__textarea"
                 rows={3}
-                placeholder="e.g. Freshly harvested, no pesticides used, available for pickup…"
+                placeholder={t("e.g. Freshly harvested, no pesticides used, available for pickup…")}
                 value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
               />
@@ -343,8 +344,8 @@ function SellPage() {
               disabled={submitting}
             >
               {submitting
-                ? <><RefreshCw size={16} className="spin-anim" /> Posting…</>
-                : <><ShoppingBag size={16} /> List My Crop</>
+                ? <><RefreshCw size={16} className="spin-anim" /> {t('Posting…')}</>
+                : <><ShoppingBag size={16} /> {t('List My Crop')}</>
               }
             </button>
           </form>
@@ -360,14 +361,14 @@ function SellPage() {
               className={`sell-tab ${activeTab === 'market' ? 'sell-tab--active' : ''}`}
               onClick={() => setActiveTab('market')}
             >
-              <Store size={15} /> All Listings
+              <Store size={15} /> {t('All Listings')}
               <span className="sell-tab__count">{listings.length}</span>
             </button>
             <button
               className={`sell-tab ${activeTab === 'mylistings' ? 'sell-tab--active' : ''}`}
               onClick={() => { setActiveTab('mylistings'); fetchMyListings(); }}
             >
-              <Leaf size={15} /> My Listings
+              <Leaf size={15} /> {t('My Listings')}
               <span className="sell-tab__count">{myListings.length}</span>
             </button>
           </div>
@@ -454,11 +455,12 @@ function SellPage() {
 
 // ─── Listing Card Component ───────────────────────────────────────────────────
 function ListingCard({ listing: l, isOwn, onDelete }) {
+  const { t } = useTranslation();
   const qualityColor = { Premium: '#d4861a', Good: '#2e7d32', Fair: '#1565c0' }[l.quality] || '#555';
 
   return (
     <div className={`listing-card ${isOwn ? 'listing-card--own' : ''}`} id={`listing-${l._id}`}>
-      {isOwn && <div className="listing-card__own-badge">Your Listing</div>}
+      {isOwn && <div className="listing-card__own-badge">{t('Your Listing')}</div>}
 
       <div className="listing-card__top">
         <div className="listing-card__crop-icon">🌾</div>
