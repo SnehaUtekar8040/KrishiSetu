@@ -65,3 +65,7 @@ app.get('/api/health', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 KrishiSetu Backend running on http://localhost:${PORT}`);
 });
+
+// Export app for Vercel Serverless Functions
+module.exports = app;
+
