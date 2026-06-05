@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, User, Phone, MapPin, Lock, Eye, EyeOff, Map, ChevronLeft } from 'lucide-react';
 import { useTranslation } from '../lib/TranslationContext';
+import { API_BASE_URL } from '../config';
 import './AuthPage.css';
 
 const INDIAN_STATES = [
@@ -63,7 +64,7 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...loginData, role: selectedRole }),
@@ -125,7 +126,7 @@ function AuthPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

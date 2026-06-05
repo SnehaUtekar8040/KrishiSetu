@@ -133,12 +133,11 @@ function HomePage() {
           <div className="section-header">
             <span className="section-tag">
               <Leaf size={14} />
-              About Us
+              {t('About Us')}
             </span>
-            <h2 className="section-title">Empowering Farmers with Technology</h2>
+            <h2 className="section-title">{t('Empowering Farmers with Technology')}</h2>
             <p className="section-desc">
-              KrishiMitra uses advanced machine learning to analyze soil composition, weather patterns, 
-              and environmental conditions to recommend the most suitable crop for your land.
+              {t('KrishiMitra uses advanced machine learning to analyze soil composition, weather patterns, and environmental conditions to recommend the most suitable crop for your land.')}
             </p>
           </div>
 
@@ -177,8 +176,8 @@ function HomePage() {
                         <div className={`about__card-icon ${card.iconClass}`}>
                           <IconComponent size={32} />
                         </div>
-                        <h3>{card.title}</h3>
-                        <p>{card.desc}</p>
+                        <h3>{t(card.title)}</h3>
+                        <p>{t(card.desc)}</p>
                       </div>
                     </div>
                   );
@@ -211,11 +210,11 @@ function HomePage() {
           <div className="section-header">
             <span className="section-tag">
               <Sprout size={14} />
-              How It Works
+              {t('How It Works')}
             </span>
-            <h2 className="section-title">Three Simple Steps</h2>
+            <h2 className="section-title">{t('Three Simple Steps')}</h2>
             <p className="section-desc">
-              Getting the right crop recommendation is just three steps away
+              {t('Getting the right crop recommendation is just three steps away')}
             </p>
           </div>
 
@@ -223,8 +222,8 @@ function HomePage() {
             <div className="step" id="step-1">
               <div className="step__number">01</div>
               <div className="step__content">
-                <h3>Enter Soil Data</h3>
-                <p>Provide your soil parameters — Nitrogen, Phosphorous, Potassium, Carbon, pH value, and soil type.</p>
+                <h3>{t('Enter Soil Data')}</h3>
+                <p>{t('Provide your soil parameters — Nitrogen, Phosphorous, Potassium, Carbon, pH value, and soil type.')}</p>
               </div>
             </div>
             <div className="step__connector">
@@ -233,8 +232,8 @@ function HomePage() {
             <div className="step" id="step-2">
               <div className="step__number">02</div>
               <div className="step__content">
-                <h3>Add Climate Info</h3>
-                <p>Enter the temperature, humidity, and rainfall data for your area for a more accurate prediction.</p>
+                <h3>{t('Add Climate Info')}</h3>
+                <p>{t('Enter the temperature, humidity, and rainfall data for your area for a more accurate prediction.')}</p>
               </div>
             </div>
             <div className="step__connector">
@@ -243,8 +242,8 @@ function HomePage() {
             <div className="step" id="step-3">
               <div className="step__number">03</div>
               <div className="step__content">
-                <h3>Get Recommendation</h3>
-                <p>Our AI analyzes your data and suggests the most suitable crop to maximize your yield and profit.</p>
+                <h3>{t('Get Recommendation')}</h3>
+                <p>{t('Our AI analyzes your data and suggests the most suitable crop to maximize your yield and profit.')}</p>
               </div>
             </div>
           </div>
@@ -252,7 +251,7 @@ function HomePage() {
           <div className="how-it-works__cta">
             <Link to="/predict" className="btn btn--primary btn--lg" id="try-now-btn">
               <Sprout size={20} />
-              Try It Now — Free
+              {t('Try It Now — Free')}
             </Link>
           </div>
         </div>
@@ -264,18 +263,18 @@ function HomePage() {
           <div className="section-header">
             <span className="section-tag">
               <Leaf size={14} />
-              Features
+              {t('Features')}
             </span>
-            <h2 className="section-title">What We Offer</h2>
+            <h2 className="section-title">{t('What We Offer')}</h2>
           </div>
 
           <div className="features__grid">
             <div className="feature-card feature-card--large" id="feature-predict">
               <div className="feature-card__content">
-                <h3>Crop Prediction Engine</h3>
-                <p>Powered by Random Forest ML model trained on real agricultural datasets. Supports 22+ crop types with 95% accuracy.</p>
+                <h3>{t('Crop Prediction Engine')}</h3>
+                <p>{t('Powered by Random Forest ML model trained on real agricultural datasets. Supports 22+ crop types with 95% accuracy.')}</p>
                 <Link to="/predict" className="feature-card__link">
-                  Start Predicting →
+                  {t('Start Predicting')} →
                 </Link>
               </div>
               <div className="feature-card__visual">
@@ -291,14 +290,14 @@ function HomePage() {
             </div>
             <div className="feature-card" id="feature-chat">
               <div className="feature-card__content">
-                <h3>AI Farming Assistant</h3>
-                <p>Chat with our AI bot for personalized tips on crop care, pest management, and modern farming techniques.</p>
+                <h3>{t('AI Farming Assistant')}</h3>
+                <p>{t('Chat with our AI bot for personalized tips on crop care, pest management, and modern farming techniques.')}</p>
               </div>
             </div>
             <div className="feature-card" id="feature-soil">
               <div className="feature-card__content">
-                <h3>Soil Analysis</h3>
-                <p>Analyze NPK, Carbon, pH and soil type to understand your land's potential and optimize crop selection.</p>
+                <h3>{t('Soil Analysis')}</h3>
+                <p>{t("Analyze NPK, Carbon, pH and soil type to understand your land's potential and optimize crop selection.")}</p>
               </div>
             </div>
           </div>
@@ -312,11 +311,11 @@ function HomePage() {
             <div className="contact__info">
               <span className="section-tag section-tag--light">
                 <Mail size={14} />
-                Get In Touch
+                {t('Get In Touch')}
               </span>
-              <h2 className="contact__title">Have Questions? Reach Out</h2>
+              <h2 className="contact__title">{t('Have Questions? Reach Out')}</h2>
               <p className="contact__desc">
-                We're here to help farmers make better decisions. Contact us for any queries about our platform.
+                {t("We're here to help farmers make better decisions. Contact us for any queries about our platform.")}
               </p>
               <div className="contact__items">
                 <div className="contact__item">
@@ -329,26 +328,26 @@ function HomePage() {
                 </div>
                 <div className="contact__item">
                   <MapPin size={18} />
-                  <span>India</span>
+                  <span>{t('India')}</span>
                 </div>
               </div>
             </div>
             <div className="contact__form-wrapper">
               <form className="contact__form" id="contact-form" onSubmit={(e) => e.preventDefault()}>
                 <div className="contact__form-group">
-                  <label htmlFor="contact-name">Name</label>
-                  <input type="text" id="contact-name" placeholder="Your name" />
+                  <label htmlFor="contact-name">{t('Name')}</label>
+                  <input type="text" id="contact-name" placeholder={t('Your name')} />
                 </div>
                 <div className="contact__form-group">
-                  <label htmlFor="contact-email">Email</label>
-                  <input type="email" id="contact-email" placeholder="your@email.com" />
+                  <label htmlFor="contact-email">{t('Email')}</label>
+                  <input type="email" id="contact-email" placeholder={t('your@email.com')} />
                 </div>
                 <div className="contact__form-group">
-                  <label htmlFor="contact-message">Message</label>
-                  <textarea id="contact-message" rows="4" placeholder="How can we help you?"></textarea>
+                  <label htmlFor="contact-message">{t('Message')}</label>
+                  <textarea id="contact-message" rows="4" placeholder={t('How can we help you?')}></textarea>
                 </div>
                 <button type="submit" className="btn btn--primary" id="contact-submit">
-                  Send Message
+                  {t('Send Message')}
                 </button>
               </form>
             </div>
@@ -365,26 +364,26 @@ function HomePage() {
                 <div className="navbar__logo-icon">
                   <Leaf size={18} />
                 </div>
-                <span>KrishiMitra</span>
+                <span>{t('KrishiMitra')}</span>
               </div>
-              <p>Empowering farmers with AI-driven crop recommendations for a sustainable future.</p>
+              <p>{t('Empowering farmers with AI-driven crop recommendations for a sustainable future.')}</p>
             </div>
             <div className="footer__links">
-              <h4>Quick Links</h4>
-              <Link to="/">Home</Link>
-              <Link to="/predict">Crop Predictor</Link>
-              <a href="#about">About Us</a>
-              <a href="#contact">Contact</a>
+              <h4>{t('Quick Links')}</h4>
+              <Link to="/">{t('Home')}</Link>
+              <Link to="/predict">{t('Crop Predictor')}</Link>
+              <a href="#about">{t('About Us')}</a>
+              <a href="#contact">{t('Contact')}</a>
             </div>
             <div className="footer__links">
-              <h4>Features</h4>
-              <a href="#features">Crop Prediction</a>
-              <a href="#features">AI Chatbot</a>
-              <a href="#features">Soil Analysis</a>
+              <h4>{t('Features')}</h4>
+              <a href="#features">{t('Crop Prediction')}</a>
+              <a href="#features">{t('AI Chatbot')}</a>
+              <a href="#features">{t('Soil Analysis')}</a>
             </div>
           </div>
           <div className="footer__bottom">
-            <p>© 2026 KrishiMitra. Built with ❤️ for Indian Farmers.</p>
+            <p>{t('© 2026 KrishiMitra. Built with ❤️ for Indian Farmers.')}</p>
           </div>
         </div>
       </footer>

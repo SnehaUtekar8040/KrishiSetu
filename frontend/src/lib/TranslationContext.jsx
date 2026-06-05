@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 
 const TranslationContext = createContext();
 
@@ -26,7 +27,7 @@ export const TranslationProvider = ({ children }) => {
     queueRef.current.clear();
 
     try {
-      const res = await fetch('http://localhost:5000/api/translate-batch', {
+      const res = await fetch(`${API_BASE_URL}/api/translate-batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sprout, Loader2, ArrowLeft, Thermometer, Droplets, CloudRain, TestTubes, Atom, Leaf, FlaskConical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '../lib/TranslationContext';
+import { API_BASE_URL } from '../config';
 import './PredictPage.css';
 
 const SOIL_TYPES = ['Loamy Soil', 'Peaty Soil', 'Sandy Soil', 'Clay Soil'];
@@ -36,7 +37,7 @@ function PredictPage() {
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/predict', {
+      const response = await fetch(`${API_BASE_URL}/api/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

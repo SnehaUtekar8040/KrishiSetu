@@ -1,2 +1,4 @@
 models
 chatbot
+.env
+venv/

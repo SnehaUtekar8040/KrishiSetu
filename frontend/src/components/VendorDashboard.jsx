@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LogOut, MapPin, Phone, User, X, Search } from 'lucide-react';
 import { useTranslation } from '../lib/TranslationContext';
+import { API_BASE_URL } from '../config';
 import './VendorDashboard.css';
 
 function VendorDashboard({ user, onLogout }) {
@@ -26,7 +27,7 @@ function VendorDashboard({ user, onLogout }) {
 
   const fetchListings = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/listings')
+    fetch(`${API_BASE_URL}/api/listings`)
       .then(r => r.json())
       .then(d => {
         setListings(d.listings || []);

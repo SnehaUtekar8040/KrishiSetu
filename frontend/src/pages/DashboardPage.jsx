@@ -12,6 +12,7 @@ import VendorDashboard from '../components/VendorDashboard';
 import CropPredictor from '../components/CropPredictor';
 import Marketplace from '../components/Marketplace';
 import { useTranslation } from '../lib/TranslationContext';
+import { API_BASE_URL } from '../config';
 import './DashboardPage.css';
 
 // ─── Seasonal Crop Calendar ────────────────────────────────────────────────
@@ -203,7 +204,7 @@ function DashboardPage() {
   // ── Fetch my sell listings ──
   useEffect(() => {
     if (!user) return;
-    fetch(`http://localhost:5000/api/listings?farmerId=${user.id}`)
+    fetch(`${API_BASE_URL}/api/listings?farmerId=${user.id}`)
       .then(r => r.json())
       .then(d => setMySellings(d.listings || []))
       .catch(() => { });
@@ -229,7 +230,7 @@ function DashboardPage() {
       state: user.state || '',
     });
 
-    fetch(`http://localhost:5000/api/weather?${params}`)
+    fetch(`${API_BASE_URL}/api/weather?${params}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) {
@@ -252,7 +253,7 @@ function DashboardPage() {
       limit: '60',
       ...(cropFilter.trim() ? { crop: cropFilter.trim() } : {}),
     });
-    fetch(`http://localhost:5000/api/mandi-prices?${params}`)
+    fetch(`${API_BASE_URL}/api/mandi-prices?${params}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) setMandiError(data.error);
@@ -541,7 +542,7 @@ function DashboardPage() {
                     onClick={() => {
                       setWeatherLoading(true);
                       const params = new URLSearchParams({ village: user.village, district: user.district || '', state: user.state || '' });
-                      fetch(`http://localhost:5000/api/weather?${params}`)
+                      fetch(`${API_BASE_URL}/api/weather?${params}`)
                         .then(r => r.json()).then(setWeather).finally(() => setWeatherLoading(false));
                     }}
                     title={t("Refresh")}

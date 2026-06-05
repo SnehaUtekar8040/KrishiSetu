@@ -172,7 +172,7 @@
 }
 
 /* ── Sections ── */
-.section-header {
+.dashboard .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -180,14 +180,14 @@
   animation: fadeIn 0.3s ease;
 }
 
-.section-title {
+.dashboard .section-title {
   font-family: 'Playfair Display', serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--brown-deep);
 }
 
-.section-back {
+.dashboard .section-back {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -202,7 +202,7 @@
   transition: all 0.2s;
 }
 
-.section-back:hover {
+.dashboard .section-back:hover {
   background: var(--cream);
   color: var(--green);
   border-color: var(--green-light);

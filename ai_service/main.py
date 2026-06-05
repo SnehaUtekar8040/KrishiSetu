@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # Load model and encoders from the models directory
-MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
+MODEL_DIR = os.path.join(os.path.dirname(__file__))
 
 model = joblib.load(os.path.join(MODEL_DIR, "crop_model.pkl"))
 encoders = joblib.load(os.path.join(MODEL_DIR, "feature_encoders.pkl"))

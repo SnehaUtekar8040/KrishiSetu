@@ -7,6 +7,7 @@ import {
   Filter, ChevronDown, Store,
 } from 'lucide-react';
 import { useTranslation } from '../lib/TranslationContext';
+import { API_BASE_URL } from '../config';
 import './SellPage.css';
 
 const CROP_OPTIONS = [
@@ -77,7 +78,7 @@ function SellPage() {
     if (crop)    params.set('crop', crop);
     if (quality) params.set('quality', quality);
     try {
-      const r = await fetch(`http://localhost:5000/api/listings?${params}`);
+      const r = await fetch(`${API_BASE_URL}/api/listings?${params}`);
       const d = await r.json();
       if (d.error) setMktError(d.error);
       else setListings(d.listings || []);
@@ -92,7 +93,7 @@ function SellPage() {
   const fetchMyListings = useCallback(async () => {
     if (!user) return;
     try {
-      const r = await fetch(`http://localhost:5000/api/listings?farmerId=${user.id}`);
+      const r = await fetch(`${API_BASE_URL}/api/listings?farmerId=${user.id}`);
       const d = await r.json();
       setMyListings(d.listings || []);
     } catch { /* silent */ }
@@ -127,7 +128,7 @@ function SellPage() {
         harvestDate:  form.harvestDate,
         description:  form.description,
       };
-      const r = await fetch('http://localhost:5000/api/listings', {
+      const r = await fetch(`${API_BASE_URL}/api/listings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -151,7 +152,7 @@ function SellPage() {
   const handleDelete = async (id) => {
     if (!window.confirm('Remove this listing?')) return;
     try {
-      await fetch(`http://localhost:5000/api/listings/${id}`, {
+      await fetch(`${API_BASE_URL}/api/listings/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ farmerId: user.id }),
