@@ -34,6 +34,17 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api', translationRoutes); // For /api/translate-batch
 
+// Root GET Request
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Welcome to KrishiSetu Backend API',
+    endpoints: {
+      health: '/api/health'
+    }
+  });
+});
+
 // Health Check
 app.get('/api/health', async (req, res) => {
   try {
