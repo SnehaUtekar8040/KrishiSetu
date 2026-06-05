@@ -18,7 +18,7 @@ const connectDB = async () => {
     console.log('✅ Connected to MongoDB');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    // Do not call process.exit(1) in serverless environments to avoid crashing the startup process
   }
 };
 

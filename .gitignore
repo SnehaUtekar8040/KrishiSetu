@@ -1,4 +1,4 @@
-models
-chatbot
+/models
+/chatbot
 .env
-venv/
+/venv/
