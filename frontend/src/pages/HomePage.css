@@ -281,6 +281,7 @@
    ======================================== */
 .about {
   background: var(--cream);
+  overflow: hidden;
 }
 
 /* Slider container */
@@ -888,6 +889,11 @@
 
   .contact__wrapper {
     grid-template-columns: 1fr;
+  }
+
+  .contact__form .btn--primary {
+    align-self: stretch;
+    justify-content: center;
   }
 
   .footer__content {

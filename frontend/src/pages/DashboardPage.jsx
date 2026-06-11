@@ -6,7 +6,7 @@ import {
   Trash2, RefreshCw, ArrowRight, Sun, Cloud, Droplets, Wind,
   AlertTriangle, CloudRain, ShoppingCart, Search, Tag, FlaskConical,
   IndianRupee, Wheat, TreeDeciduous, Filter, Building2, ExternalLink, BadgeCheck,
-  ShoppingBag,
+  ShoppingBag, Menu, X,
 } from 'lucide-react';
 import VendorDashboard from '../components/VendorDashboard';
 import CropPredictor from '../components/CropPredictor';
@@ -149,12 +149,14 @@ function DashboardPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [predictions, setPredictions] = useState([]);
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState(null);
   const [greeting, setGreeting] = useState('');
   const [showAlert, setShowAlert] = useState(true);
+  const [forecastIndex, setForecastIndex] = useState(0); // mobile carousel index
 
   // Mandi prices state
   const [mandiData, setMandiData] = useState(null);
@@ -321,39 +323,47 @@ function DashboardPage() {
         </div>
       )}
 
+      {/* ── Sidebar Backdrop ── */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)}></div>
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="dashboard__sidebar" id="dashboard-sidebar">
+      <aside className={`dashboard__sidebar ${sidebarOpen ? 'dashboard__sidebar--open' : ''}`} id="dashboard-sidebar">
         <div className="sidebar__brand">
           <div className="sidebar__logo">
             <Leaf size={20} />
           </div>
           <span>KrishiSetu</span>
+          <button className="sidebar__close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="sidebar__nav">
-          <button className={`sidebar__link ${activeSection === 'overview' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('overview')}>
+          <button className={`sidebar__link ${activeSection === 'overview' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('overview'); setSidebarOpen(false); }}>
             <TrendingUp size={18} /> {t('Overview')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'predict' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('predict')}>
+          <button className={`sidebar__link ${activeSection === 'predict' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('predict'); setSidebarOpen(false); }}>
             <Sprout size={18} /> {t('Crop Predictor')}
           </button>
 
-          <button className={`sidebar__link ${activeSection === 'calendar' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('calendar')}>
+          <button className={`sidebar__link ${activeSection === 'calendar' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('calendar'); setSidebarOpen(false); }}>
             <Calendar size={18} /> {t('Crop Calendar')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'tips' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('tips')}>
+          <button className={`sidebar__link ${activeSection === 'tips' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('tips'); setSidebarOpen(false); }}>
             <Lightbulb size={18} /> {t('Farming Tips')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'mandi' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('mandi')}>
+          <button className={`sidebar__link ${activeSection === 'mandi' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('mandi'); setSidebarOpen(false); }}>
             <ShoppingCart size={18} /> {t('Mandi Prices')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'fertilizer' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('fertilizer')}>
+          <button className={`sidebar__link ${activeSection === 'fertilizer' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('fertilizer'); setSidebarOpen(false); }}>
             <FlaskConical size={18} /> {t('Fertilizer Guide')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'schemes' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('schemes')}>
+          <button className={`sidebar__link ${activeSection === 'schemes' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('schemes'); setSidebarOpen(false); }}>
             <Building2 size={18} /> {t('Govt Schemes')}
           </button>
-          <button className={`sidebar__link ${activeSection === 'sell' ? 'sidebar__link--active' : ''}`} onClick={() => updateSection('sell')}>
+          <button className={`sidebar__link ${activeSection === 'sell' ? 'sidebar__link--active' : ''}`} onClick={() => { updateSection('sell'); setSidebarOpen(false); }}>
             <ShoppingBag size={18} /> {t('Sell Your Crop')}
           </button>
         </nav>
@@ -369,12 +379,17 @@ function DashboardPage() {
 
         {/* ── Top Header ── */}
         <header className="dashboard__header" id="overview">
-          <div>
-            <p className="dashboard__greeting">{t(greeting)}, 👋</p>
-            <h1 className="dashboard__username">{user.name}</h1>
-            <p className="dashboard__location">
-              <MapPin size={13} /> {user.village}, {user.state}
-            </p>
+          <div className="dashboard__header-left">
+            <button className="dashboard__menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Open navigation menu">
+              <Menu size={20} />
+            </button>
+            <div>
+              <p className="dashboard__greeting">{t(greeting)}, 👋</p>
+              <h1 className="dashboard__username">{user.name}</h1>
+              <p className="dashboard__location">
+                <MapPin size={13} /> {user.village}, {user.state}
+              </p>
+            </div>
           </div>
           <button className="dashboard__logout-mobile" onClick={handleLogout}>
             <LogOut size={18} />
@@ -464,15 +479,18 @@ function DashboardPage() {
                           <div className="selling-mini-price">₹{listing.pricePerUnit}/{listing.unit}</div>
                         </div>
                       ))}
-                      {mySellings.length > 3 ? (
-                        <button onClick={() => updateSection('sell')} className="selling-view-more">
-                          {t('View')} {mySellings.length - 3} {t('More')} →
-                        </button>
-                      ) : (
-                        <button onClick={() => updateSection('sell')} className="selling-view-more">
-                          {t('Manage Listings')} →
-                        </button>
-                      )}
+                      {/* 4th card — view more or manage listings */}
+                      <button onClick={() => updateSection('sell')} className="selling-mini-card selling-mini-card--more">
+                        <div className="selling-mini-top">
+                          <span className="selling-mini-more-icon">🛒</span>
+                          <span className="selling-mini-name">
+                            {mySellings.length > 3 ? `+${mySellings.length - 3} More` : t('Manage')}
+                          </span>
+                        </div>
+                        <div className="selling-mini-price selling-mini-view-label">
+                          {mySellings.length > 3 ? t('View All') : t('All Listings')} →
+                        </div>
+                      </button>
                     </>
                   )}
                 </div>
@@ -501,21 +519,21 @@ function DashboardPage() {
                   <span className="action-btn__text">{t('Ask AI Advisor')}</span>
                   <ArrowRight size={15} />
                 </button>
-                <a href="#calendar" className="action-btn action-btn--brown" id="action-calendar">
+                <button onClick={() => updateSection('calendar')} className="action-btn action-btn--brown" id="action-calendar">
                   <span className="action-btn__icon">📅</span>
                   <span className="action-btn__text">{t('Crop Calendar')}</span>
                   <ArrowRight size={15} />
-                </a>
-                <a href="#tips" className="action-btn action-btn--amber" id="action-tips">
+                </button>
+                <button onClick={() => updateSection('tips')} className="action-btn action-btn--amber" id="action-tips">
                   <span className="action-btn__icon">💡</span>
                   <span className="action-btn__text">{t('Farming Tips')}</span>
                   <ArrowRight size={15} />
-                </a>
-                <a href="#fertilizer-guide" className="action-btn action-btn--purple" id="action-fertilizer">
+                </button>
+                <button onClick={() => updateSection('fertilizer')} className="action-btn action-btn--purple" id="action-fertilizer">
                   <span className="action-btn__icon">🧪</span>
                   <span className="action-btn__text">{t('Fertilizer Guide')}</span>
                   <ArrowRight size={15} />
-                </a>
+                </button>
                 <button onClick={() => updateSection('sell')} className="action-btn action-btn--orange" id="action-sell">
                   <span className="action-btn__icon">🛒</span>
                   <span className="action-btn__text">{t('Sell Your Crop')}</span>
@@ -541,9 +559,23 @@ function DashboardPage() {
                     className="widget__action-btn"
                     onClick={() => {
                       setWeatherLoading(true);
+                      setWeatherError(null);
                       const params = new URLSearchParams({ village: user.village, district: user.district || '', state: user.state || '' });
                       fetch(`${API_BASE_URL}/api/weather?${params}`)
-                        .then(r => r.json()).then(setWeather).finally(() => setWeatherLoading(false));
+                        .then(r => r.json())
+                        .then(data => {
+                          if (data.error) {
+                            setWeatherError(data.error);
+                            setWeather(null);
+                          } else {
+                            setWeather(data);
+                          }
+                        })
+                        .catch(() => {
+                          setWeatherError('Could not load weather data.');
+                          setWeather(null);
+                        })
+                        .finally(() => setWeatherLoading(false));
                     }}
                     title={t("Refresh")}
                   >
@@ -585,9 +617,9 @@ function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* 5-Day Forecast */}
-                  <div className="weather__forecast">
-                    {weather.forecast.slice(0, 5).map((day, i) => (
+                  {/* ── Forecast: Desktop flex row ── */}
+                  <div className="weather__forecast weather__forecast--desktop">
+                    {weather.forecast.slice(0, 3).map((day, i) => (
                       <div
                         key={day.date}
                         className={`forecast__day ${i === 1 && weather.rainAlert ? 'forecast__day--rain-alert' : ''}`}
@@ -612,6 +644,65 @@ function DashboardPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* ── Forecast: Mobile carousel (one day at a time) ── */}
+                  {(() => {
+                    const days = weather.forecast.slice(0, 3);
+                    const day = days[forecastIndex];
+                    return (
+                      <div className="weather__forecast--mobile">
+                        <button
+                          className="forecast__nav forecast__nav--prev"
+                          onClick={() => setForecastIndex(i => Math.max(0, i - 1))}
+                          disabled={forecastIndex === 0}
+                          aria-label="Previous day"
+                        >
+                          ‹
+                        </button>
+
+                        <div className={`forecast__day forecast__day--carousel ${forecastIndex === 1 && weather.rainAlert ? 'forecast__day--rain-alert' : ''}`}>
+                          <span className="forecast__label">{t(formatDay(day.date, forecastIndex))}</span>
+                          <span className="forecast__icon">{day.icon}</span>
+                          <span className="forecast__desc">{t(day.desc)}</span>
+                          <div className="forecast__temps">
+                            <span className="forecast__max">{day.maxTemp}°</span>
+                            <span className="forecast__min">{day.minTemp}°</span>
+                          </div>
+                          <div className="forecast__rain-bar">
+                            <div
+                              className="forecast__rain-fill"
+                              style={{ width: `${Math.min(day.rainProb, 100)}%` }}
+                            />
+                          </div>
+                          <span className="forecast__rain-pct">{day.rainProb}% rain</span>
+                          {forecastIndex === 1 && weather.rainAlert && (
+                            <span className="forecast__alert-tag">⚠️ {t('Rain Alert')}</span>
+                          )}
+                        </div>
+
+                        <button
+                          className="forecast__nav forecast__nav--next"
+                          onClick={() => setForecastIndex(i => Math.min(days.length - 1, i + 1))}
+                          disabled={forecastIndex === days.length - 1}
+                          aria-label="Next day"
+                        >
+                          ›
+                        </button>
+
+                        {/* Dot indicators */}
+                        <div className="forecast__dots">
+                          {days.map((_, i) => (
+                            <button
+                              key={i}
+                              className={`forecast__dot ${i === forecastIndex ? 'forecast__dot--active' : ''}`}
+                              onClick={() => setForecastIndex(i)}
+                              aria-label={`Day ${i + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : null}
             </div>

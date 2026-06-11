@@ -66,6 +66,38 @@ function Navbar() {
           </Link>
           <a href="#about" className="navbar__link" id="nav-about">{t('About Us')}</a>
           <a href="#contact" className="navbar__link" id="nav-contact">{t('Contact')}</a>
+          
+          <div className="navbar__mobile-items">
+            <div className="navbar__lang-selector">
+              <Globe size={16} />
+              <select 
+                value={language} 
+                onChange={(e) => setLanguage(e.target.value)}
+                className="navbar__lang-select"
+              >
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>{lang.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard" className="navbar__dashboard-btn" id="nav-dashboard-mobile">
+                  <LayoutDashboard size={16} />
+                  {t('Dashboard')}
+                </Link>
+                <button className="navbar__logout-btn" onClick={handleLogout} id="nav-logout-mobile">
+                  <LogOut size={15} />
+                  {t('Logout')}
+                </button>
+              </>
+            ) : (
+              <Link to="/auth" className="navbar__cta" id="nav-cta-mobile">
+                {t('Login / Sign Up')}
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="navbar__right">

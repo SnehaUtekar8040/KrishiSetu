@@ -409,7 +409,24 @@
   .vendor-main {
     padding: 0 20px;
   }
+  .vendor-modal {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .vendor-modal__header {
+    padding: 16px 24px;
+  }
+  .vendor-modal__content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 20px;
+  }
   .vendor-modal__grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .vendor-modal__actions {
+    padding: 16px 24px;
   }
 }

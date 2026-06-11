@@ -1,118 +1,127 @@
 const axios = require('axios');
 
+// ── Map wttr.in weather codes to icons and descriptions ──────────────────────
+// Using Unicode escape sequences to guarantee correct encoding
 const codeInfo = (code) => {
-  if (code === 0)  return { desc: 'Clear Sky',    icon: '☀️'  };
-  if (code <= 2)   return { desc: 'Mainly Clear', icon: '🌤️' };
-  if (code === 3)  return { desc: 'Overcast',     icon: '☁️'  };
-  if (code <= 48)  return { desc: 'Foggy',        icon: '🌫️' };
-  if (code <= 57)  return { desc: 'Drizzle',      icon: '🌦️' };
-  if (code <= 67)  return { desc: 'Rain',         icon: '🌧️' };
-  if (code <= 77)  return { desc: 'Snow',         icon: '❄️'  };
-  if (code <= 82)  return { desc: 'Rain Showers', icon: '🌦️' };
-  if (code <= 86)  return { desc: 'Snow Showers', icon: '🌨️' };
-  if (code >= 95)  return { desc: 'Thunderstorm', icon: '⛈️'  };
-  return { desc: 'Clear', icon: '☀️' };
+  const c = parseInt(code, 10);
+  if (c === 113) return { desc: 'Clear Sky',      icon: '\u2600\uFE0F'  };  // ☀️
+  if (c === 116) return { desc: 'Partly Cloudy',  icon: '\uD83C\uDF24\uFE0F' }; // 🌤️
+  if (c === 119) return { desc: 'Cloudy',         icon: '\u2601\uFE0F'  };  // ☁️
+  if (c === 122) return { desc: 'Overcast',       icon: '\u2601\uFE0F'  };  // ☁️
+  if (c === 143) return { desc: 'Foggy',          icon: '\uD83C\uDF2B\uFE0F' }; // 🌫️
+  if ([176, 293, 296, 299, 302, 305, 308].includes(c)) return { desc: 'Rain',         icon: '\uD83C\uDF27\uFE0F' }; // 🌧️
+  if ([179, 323, 326, 329, 332, 335, 338].includes(c)) return { desc: 'Snow',         icon: '\u2744\uFE0F'  };     // ❄️
+  if ([185, 281, 284].includes(c))                     return { desc: 'Drizzle',      icon: '\uD83C\uDF26\uFE0F' }; // 🌦️
+  if ([200, 386, 389, 392, 395].includes(c))           return { desc: 'Thunderstorm', icon: '\u26C8\uFE0F'  };     // ⛈️
+  if ([260, 263, 266].includes(c))                     return { desc: 'Drizzle',      icon: '\uD83C\uDF26\uFE0F' }; // 🌦️
+  if ([311, 314, 317, 320].includes(c))                return { desc: 'Rain Showers', icon: '\uD83C\uDF26\uFE0F' }; // 🌦️
+  if ([227, 230].includes(c))                          return { desc: 'Blizzard',     icon: '\uD83C\uDF28\uFE0F' }; // 🌨️
+  if (c === 248)                                       return { desc: 'Foggy',        icon: '\uD83C\uDF2B\uFE0F' }; // 🌫️
+  return { desc: 'Cloudy', icon: '\uD83C\uDF25\uFE0F' }; // 🌥️
 };
 
 exports.getWeather = async (req, res) => {
   const { village, district, state } = req.query;
   if (!village) return res.status(400).json({ error: 'village is required' });
 
-  let latitude, longitude, resolvedName, resolvedState;
-
-  // Strategy A: Open-Meteo geocoding
-  try {
-    const parts = [village.trim()];
-    if (district && district.trim()) parts.push(district.trim());
-    if (state && state.trim()) parts.push(state.trim());
-    const q = encodeURIComponent(parts.join(', '));
-    const r = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=10&language=en&format=json`);
-    const results = r.data.results || [];
-    const hit = results.find(h => h.country_code === 'IN') || results[0];
-    if (hit) {
-      ({ latitude, longitude } = hit);
-      resolvedName = hit.name;
-      resolvedState = hit.admin1;
-    }
-  } catch (e) { console.warn('Open-Meteo geocoding failed'); }
-
-  // Strategy B: Nominatim
-  if (!latitude) {
-    try {
-      const parts = [village.trim()];
-      if (district && district.trim()) parts.push(district.trim());
-      parts.push(state || 'India');
-      const q = encodeURIComponent(parts.join(', '));
-      const r = await axios.get(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&countrycodes=in`, { headers: { 'User-Agent': 'KrishiSetu-FarmApp/1.0' } });
-      const results = r.data || [];
-      if (results.length > 0) {
-        latitude = parseFloat(results[0].lat);
-        longitude = parseFloat(results[0].lon);
-        const parts2 = (results[0].display_name || '').split(',');
-        resolvedName = parts2[0]?.trim() || village;
-        resolvedState = state || 'India';
-      }
-    } catch (e) { console.warn('Nominatim geocoding failed'); }
-  }
-
-  if (!latitude || !longitude) {
-    return res.status(404).json({ error: `Could not find location "${village}". Please check the spelling.` });
-  }
+  // Build a location query that wttr.in can resolve
+  const parts = [village.trim()];
+  if (district && district.trim()) parts.push(district.trim());
+  if (state && state.trim()) parts.push(state.trim());
+  const locationQuery = parts.join(', ');
 
   try {
-    const weatherRes = await axios.get(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,windspeed_10m_max&hourly=relativehumidity_2m,precipitation_probability,temperature_2m,weathercode&timezone=Asia%2FKolkata&forecast_days=7`
-    );
+    // wttr.in returns current weather + 3-day forecast with hourly breakdown
+    // format=j1 gives structured JSON, no API key needed
+    const url = `https://wttr.in/${encodeURIComponent(locationQuery)}?format=j1`;
+    const response = await axios.get(url, {
+      timeout: 15000,
+      headers: { 'User-Agent': 'KrishiSetu-FarmApp/1.0' },
+      responseType: 'json',
+    });
 
-    const data = weatherRes.data;
-    const cw = data.current_weather;
-    const currentInfo = codeInfo(cw.weathercode);
+    const data = response.data;
 
-    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-    const humidityIdx = Math.min(nowIST.getHours(), (data.hourly?.relativehumidity_2m?.length || 24) - 1);
-    const humidity = data.hourly?.relativehumidity_2m?.[humidityIdx] ?? '--';
+    // ── Nearest area / location info ─────────────────────────────────────────
+    const nearest = data.nearest_area && data.nearest_area[0];
+    const resolvedName  = (nearest && nearest.areaName  && nearest.areaName[0]  && nearest.areaName[0].value)  || village;
+    const resolvedState = (nearest && nearest.region     && nearest.region[0]     && nearest.region[0].value)    || state || 'India';
 
-    const getDaytimeCode = (dayOffset) => {
-      const start = dayOffset * 24 + 9;
-      const end   = dayOffset * 24 + 15;
-      const codes = (data.hourly?.weathercode || []).slice(start, end + 1);
-      if (!codes.length) return null;
-      const freq = {};
-      codes.forEach(c => { freq[c] = (freq[c] || 0) + 1; });
-      return parseInt(Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0]);
+    // ── Current weather ───────────────────────────────────────────────────────
+    const cur = data.current_condition && data.current_condition[0];
+    const currentCode = (cur && cur.weatherCode) || '113';
+    const currentInfo = codeInfo(currentCode);
+    const currentDesc = (cur && cur.weatherDesc && cur.weatherDesc[0] && cur.weatherDesc[0].value) || currentInfo.desc;
+
+    const current = {
+      temp:     parseInt((cur && cur.temp_C) || '0', 10),
+      desc:     currentDesc,
+      icon:     currentInfo.icon,
+      wind:     parseInt((cur && cur.windspeedKmph) || '0', 10),
+      humidity: parseInt((cur && cur.humidity) || '0', 10),
     };
 
-    const daily = data.daily;
-    const forecast = daily.time.map((date, i) => {
-      let weatherCode = i === 0 ? cw.weathercode : (getDaytimeCode(i) ?? daily.weathercode[i]);
+    // ── 3-Day forecast (wttr.in gives exactly 3 days) ────────────────────────
+    const weather3 = data.weather || [];
+
+    const forecast = weather3.map((day) => {
+      const date = day.date; // "YYYY-MM-DD"
+
+      // Daytime dominant code: look at hourly slots between 9:00–15:00
+      const daytimeHourly = (day.hourly || []).filter(h => {
+        const t = parseInt(h.time, 10);
+        return t >= 900 && t <= 1500;
+      });
+      const midHour = daytimeHourly[Math.floor(daytimeHourly.length / 2)];
+      const dominantCode = (midHour && midHour.weatherCode) || (day.hourly && day.hourly[0] && day.hourly[0].weatherCode) || '113';
+
+      const info = codeInfo(dominantCode);
+
+      // Max rain probability across hourly slots
+      const rainProbs = (day.hourly || []).map(h => parseInt((h && h.chanceofrain) || '0', 10));
+      const rainProb  = rainProbs.length > 0 ? Math.max(...rainProbs) : 0;
+
+      // Total daily rain (sum of hourly precip)
+      const rainMm = parseFloat(
+        (day.hourly || []).reduce((sum, h) => sum + parseFloat((h && h.precipMM) || '0'), 0).toFixed(1)
+      );
+
       return {
         date,
-        maxTemp: Math.round(daily.temperature_2m_max[i]),
-        minTemp: Math.round(daily.temperature_2m_min[i]),
-        rainMm: daily.precipitation_sum[i] ?? 0,
-        rainProb: daily.precipitation_probability_max[i] ?? 0,
-        windspeed: Math.round(daily.windspeed_10m_max[i]),
-        ...codeInfo(weatherCode),
+        maxTemp:  parseInt(day.maxtempC || '0', 10),
+        minTemp:  parseInt(day.mintempC || '0', 10),
+        rainMm,
+        rainProb,
+        windspeed: parseInt((day.hourly && day.hourly[3] && day.hourly[3].windspeedKmph) || '0', 10),
+        desc: info.desc,
+        icon: info.icon,
       };
     });
 
-    const tomorrow = forecast[1];
-    const rainAlert = tomorrow && (tomorrow.rainProb >= 50 || tomorrow.rainMm >= 5);
+    // ── Rain alert: tomorrow >= 50% chance or >= 5mm ──────────────────────────
+    const tomorrow  = forecast[1] || null;
+    const rainAlert = !!(tomorrow && (tomorrow.rainProb >= 50 || tomorrow.rainMm >= 5));
 
-    res.json({
-      location: { name: resolvedName, state: resolvedState, latitude, longitude },
-      current: {
-        temp: Math.round(cw.temperature),
-        desc: currentInfo.desc,
-        icon: currentInfo.icon,
-        wind: Math.round(cw.windspeed),
-        humidity,
-      },
+    return res.json({
+      location: { name: resolvedName, state: resolvedState },
+      current,
       forecast,
       rainAlert,
-      tomorrowRain: tomorrow ? { prob: tomorrow.rainProb, mm: tomorrow.rainMm, icon: tomorrow.icon, desc: tomorrow.desc } : null,
+      tomorrowRain: tomorrow
+        ? { prob: tomorrow.rainProb, mm: tomorrow.rainMm, icon: tomorrow.icon, desc: tomorrow.desc }
+        : null,
     });
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch weather data.' });
+    console.error('Weather fetch error:', err.message);
+
+    // ── Friendly error messages ───────────────────────────────────────────────
+    if (err.response && err.response.status === 404) {
+      return res.status(404).json({ error: 'Could not find weather data for "' + locationQuery + '". Please check the location spelling.' });
+    }
+    if (err.code === 'ECONNABORTED') {
+      return res.status(503).json({ error: 'Weather service timed out. Please try again.' });
+    }
+    return res.status(500).json({ error: 'Failed to fetch weather data. Please try again later.' });
   }
 };
