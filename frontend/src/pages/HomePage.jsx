@@ -85,6 +85,9 @@ function HomePage() {
                 <Sprout size={18} />
                 {t('Predict Your Crop')}
               </Link>
+              <Link to="/auth" className="btn btn--login" id="hero-login-btn">
+                {t('Login / Sign Up')}
+              </Link>
               <a href="#about" className="btn btn--outline" id="hero-about-btn">
                 {t('Learn More')}
               </a>

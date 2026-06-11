@@ -187,6 +187,45 @@
   display: none;
 }
 
+/* ── Always-visible mobile auth pill (hidden on desktop) ── */
+.navbar__mobile-auth {
+  display: none;
+}
+
+.navbar__mobile-auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(107, 143, 60, 0.35);
+  transition: all 0.2s ease;
+}
+
+.navbar__mobile-auth-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(107, 143, 60, 0.45);
+}
+
+.navbar__mobile-auth-btn--dash {
+  padding: 8px 10px;
+  background: rgba(107, 143, 60, 0.12);
+  color: var(--green-dark);
+  box-shadow: none;
+  border: 1.5px solid rgba(107, 143, 60, 0.3);
+}
+
+.navbar__mobile-auth-btn--dash:hover {
+  background: rgba(107, 143, 60, 0.22);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
 @media (max-width: 768px) {
   .navbar__links {
     position: fixed;
@@ -215,6 +254,7 @@
   }
 
   .navbar__cta {
+    /* CTA inside the full-screen drawer still shows via .navbar__mobile-items */
     display: none;
   }
 
@@ -224,6 +264,13 @@
 
   .navbar__menu-btn {
     display: flex;
+    z-index: 1001;
+  }
+
+  /* Show the always-visible login pill on mobile */
+  .navbar__mobile-auth {
+    display: flex;
+    align-items: center;
     z-index: 1001;
   }
 

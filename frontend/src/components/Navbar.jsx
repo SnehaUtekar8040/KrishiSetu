@@ -132,6 +132,19 @@ function Navbar() {
           )}
         </div>
 
+        {/* Always-visible mobile auth button (shown next to hamburger) */}
+        <div className="navbar__mobile-auth">
+          {isLoggedIn ? (
+            <Link to="/dashboard" className="navbar__mobile-auth-btn navbar__mobile-auth-btn--dash" id="nav-dashboard-pill">
+              <LayoutDashboard size={16} />
+            </Link>
+          ) : (
+            <Link to="/auth" className="navbar__mobile-auth-btn" id="nav-login-pill">
+              {t('Login')}
+            </Link>
+          )}
+        </div>
+
         <button
           className="navbar__menu-btn"
           onClick={() => setMenuOpen(!menuOpen)}
